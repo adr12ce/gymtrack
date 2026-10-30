@@ -17,7 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* =========================================================
-   GymTrack · v5.7.0 · por adr12ce
+   GymTrack · v5.8.0 · por adr12ce
    1. Estilos  2. Script: Config · Utils · Store/Migraciones · Consultas
    · Nube (Supabase) · Contador de días · UI · Gráficas · Vistas · Modales · Acceso · Acciones · App
    ========================================================= */
@@ -274,8 +274,23 @@ body.auth{padding-bottom:24px}
 .ss-who{display:flex;align-items:center;gap:8px;padding:4px 0}
 .ss-who .ssk{margin:0}
 .ss-who b{flex:1;min-width:0}
-.sets.ss tr.ss-odd td{background:color-mix(in srgb,var(--card-2) 55%,transparent)}
-.sets.ss tr.ss-a.ss-odd td:first-child,.sets.ss tr.ss-b.ss-odd td:first-child{border-radius:8px 0 0 8px}
+.ssk.c{background:#f59e0b}
+.sets.ss{border-collapse:separate;border-spacing:0}
+.sets.ss tbody.ssg td{padding-top:3px;padding-bottom:3px}
+.sets.ss tbody.ssg:nth-of-type(odd) td{background:color-mix(in srgb,var(--card-2) 70%,transparent)}
+.sets.ss tbody.ssg tr:first-child td{border-top:2px solid var(--line);padding-top:7px}
+.sets.ss tbody.ssg tr:last-child td{padding-bottom:7px}
+.sets.ss td.ssn{font-size:20px;font-weight:800;color:var(--text);vertical-align:middle;border-left:4px solid var(--accent);width:34px}
+.sets.ss td.k{width:26px;text-align:center;padding-left:0;padding-right:0}
+.sets.ss td.k .ssk{margin:0}
+.ss-whos .ss-who{border-radius:10px;padding:6px 2px}
+.ss-whos .ss-who + .ss-who{border-top:1px solid var(--line)}
+.ss-who .grip{margin:0 -2px 0 0}
+.ss-who .icon-btn{width:30px;height:30px;font-size:13px}
+.ss-who.lifted{background:var(--card);box-shadow:0 10px 28px rgba(0,0,0,.22);position:relative;z-index:3}
+.ss-group .ss-body .item .grip{width:16px}
+.del-account{margin-left:auto;background:var(--danger);border-color:var(--danger);color:var(--text)}
+.reset-row{margin-top:10px}
 .sets td.na{text-align:center;color:var(--muted)}
 /* nota del día */
 .note-add{margin-top:6px}
@@ -303,7 +318,7 @@ body.auth{padding-bottom:24px}
 <script>
 'use strict';
 /* ===================== 1. CONFIG ===================== */
-const APP_VERSION = '5.7.0';
+const APP_VERSION = '5.8.0';
 const SCHEMA_VERSION = 8;          // súbelo cuando cambie la estructura de datos y añade su migración
 const STORAGE_KEY = 'gymtrack.data';
 const PENDING_KEY = 'gymtrack.pending.';   // + id de usuario: hay cambios guardados en el dispositivo sin subir a la nube
@@ -724,16 +739,23 @@ const DB = {
     s += it.log.slice(it.plan.length).filter(this.done).length;
     return s > 0 ? '+' : s < 0 ? '-' : '=';
   },
-  // biserie: dos ejercicios seguidos con el mismo "ss"
-  partner(list, it) { return it?.ss ? (list || []).find(x => x.ss === it.ss && x.id !== it.id) || null : null; },
-  // deja solo biseries válidas: exactamente 2 ejercicios de fuerza seguidos
+  // biserie / triserie: 2 o 3 ejercicios seguidos con el mismo "ss" (A, B, C según el orden)
+  SS_MAX: 3,
+  mates(list, it) { return it?.ss ? (list || []).filter(x => x.ss === it.ss) : []; },
+  ssName(n) { return n >= 3 ? 'Triserie' : 'Biserie'; },
+  // deja solo grupos válidos: de 2 a 3 ejercicios de fuerza seguidos
   fixSS(list) {
     if (!list) return;
+    const seen = new Set();
     for (let i = 0; i < list.length; i++) {
       const it = list[i]; if (!it.ss) continue;
-      const nx = list[i + 1], ok = nx && nx.ss === it.ss && !(list[i + 2]?.ss === it.ss) && !this.isCardio(this.ex(it.exerciseId)) && !this.isCardio(this.ex(nx.exerciseId));
-      if (ok) { i++; continue; }
-      delete it.ss;
+      let j = i; while (list[j + 1]?.ss === it.ss) j++;
+      const run = list.slice(i, j + 1);
+      run.slice(this.SS_MAX).forEach(x => delete x.ss);
+      const g = run.slice(0, this.SS_MAX);
+      if (seen.has(it.ss) || g.length < 2 || g.some(x => this.isCardio(this.ex(x.exerciseId)))) g.forEach(x => delete x.ss);
+      else seen.add(it.ss);
+      i = j;
     }
   },
   isGymDay(date) { return this.day(date).some(it => this.validSets(it.log).length); }
@@ -784,6 +806,16 @@ const Perf = {
       const s = DB.status(it); if (s === '-') r++; else if (s) g++;
     }
     return { g, r };
+  },
+  // totales generales desde el último "Restablecer": lo de días posteriores + lo que se sumó ese mismo día después de restablecer
+  scoreTotal() {
+    const r = Store.data.account.resets?.score; if (!r) return this.score();
+    const after = this.score(U.addDays(r.d, 1)), day = this.score(r.d, r.d);
+    return { g: after.g + Math.max(0, day.g - r.g), r: after.r + Math.max(0, day.r - r.r) };
+  },
+  cardioTotal() {
+    const r = Store.data.account.resets?.cardio; if (!r) return this.cardio();
+    return this.cardio(U.addDays(r.d, 1)) + Math.max(0, this.cardio(r.d, r.d) - r.m);
   },
   // minutos de cardio realizados
   cardio(from = '0000', to = '9999') {
@@ -902,7 +934,7 @@ const UI = {
     const rPh = s.f ? 'FALLO' : (ph ? (ph.r ?? (ph.f ? 'FALLO' : '–')) : '–');
     const load = o.loadCol === false ? '' : bw ? '<td class="na">—</td>' : `<td>${this.loadField(ex, s.w, a + ' data-k="w"' + dis, ro ? '–' : ph?.w)}</td>`;
     return `<tr class="${o.cls || ''}">
-      <td class="n">${o.label || i + 1}</td>${load}
+      ${o.lead ?? `<td class="n">${o.label || i + 1}</td>`}${load}
       <td class="r">${plan && s.f
         ? `<input type="text" class="fallo" value="" placeholder="${ds ? 'FALLO+DS' : 'FALLO'}" readonly tabindex="-1" aria-label="Al fallo">`
         : `<input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" class="${s.f ? 'fallo' : ''}" value="${s.r ?? ''}" placeholder="${ro && !s.f ? '–' : (s.f ? (ds ? 'FALLO+DS' : 'FALLO') : rPh)}" ${a} data-k="r"${dis}>${s.f && s.r != null ? `<span class="fallo-tag">${ds ? 'FALLO+DS' : 'FALLO'}</span>` : ''}`}</td>
@@ -917,31 +949,39 @@ const UI = {
       </tbody></table>
       ${ro ? '' : `<button class="btn sm ghost mt" data-act="row-add" data-t="${type}">+ Serie</button>`}`;
   },
-  // biserie: series intercaladas 1A, 1B, 2A, 2B… (se hace una de cada y luego se descansa)
-  ssTable(a, b, type, ro) {
-    const k = type === 'plan' ? 'plan' : 'log', exA = DB.ex(a.exerciseId), exB = DB.ex(b.exerciseId), A = a[k], B = b[k];
-    let rows = '';
-    for (let i = 0; i < Math.max(A.length, B.length); i++) {
-      if (A[i]) rows += this.setRow(exA, A[i], i, type, type === 'log' ? a.plan[i] : null, ro, { x: a.id, label: `${i + 1}<i class="ssk a">A</i>`, cls: 'ss-a' + (i % 2 ? '' : ' ss-odd'), count: A.length });
-      if (B[i]) rows += this.setRow(exB, B[i], i, type, type === 'log' ? b.plan[i] : null, ro, { x: b.id, label: `${i + 1}<i class="ssk b">B</i>`, cls: 'ss-b' + (i % 2 ? '' : ' ss-odd'), count: B.length });
+  // biserie/triserie: series intercaladas 1A, 1B, (1C), 2A… agrupadas por número de serie
+  ssTable(group, type, ro) {
+    const k = type === 'plan' ? 'plan' : 'log', L = 'ABC';
+    const n = Math.max(...group.map(g => g[k].length));
+    let body = '';
+    for (let i = 0; i < n; i++) {
+      const present = group.map((g, j) => [g, j]).filter(([g]) => g[k][i]);
+      body += `<tbody class="ssg">` + present.map(([g, j], q) => {
+        const ex = DB.ex(g.exerciseId), badge = `<td class="k"><i class="ssk ${L[j].toLowerCase()}">${L[j]}</i></td>`;
+        const lead = (q ? '' : `<td class="n ssn" rowspan="${present.length}">${i + 1}</td>`) + badge;
+        return this.setRow(ex, g[k][i], i, type, type === 'log' ? g.plan[i] : null, ro, { x: g.id, lead, count: g[k].length });
+      }).join('') + '</tbody>';
     }
-    return `<table class="sets ss"><thead><tr><th>Serie</th><th>Carga</th><th>Reps</th><th title="Al fallo / Drop set">F</th><th></th></tr></thead><tbody>${rows}</tbody></table>
-      ${ro ? '' : `<button class="btn sm ghost mt" data-act="row-add" data-t="${type}" data-x="both">+ Serie (A y B)</button>`}`;
+    return `<table class="sets ss"><thead><tr><th>Serie</th><th></th><th>Carga</th><th>Reps</th><th title="Al fallo / Drop set">F</th>${ro ? '' : '<th></th>'}</tr></thead>${body}</table>
+      ${ro ? '' : `<button class="btn sm ghost mt" data-act="row-add" data-t="${type}" data-x="both">+ Serie (${group.map((_, j) => L[j]).join(', ').replace(/, (\w)$/, ' y $1')})</button>`}`;
   },
-  // ejercicios de un día: las biseries van agrupadas en un recuadro
-  dayItems(items, attrs, withStatus, canSort) {
+  // ejercicios de un día: las biseries/triseries van agrupadas en un recuadro
+  dayItems(items, attrs, withStatus, editable) {
     const grip = '<span class="grip" data-act="grip" title="Arrastra para cambiar el orden" aria-label="Reordenar">⠿</span>';
+    const canSort = editable && this.units(items) > 1;
     let h = '';
     for (let i = 0; i < items.length; i++) {
-      const it = items[i], nx = items[i + 1];
-      if (it.ss && nx?.ss === it.ss) {
-        h += `<div class="ss-group" data-rid="ss:${it.ss}">${canSort ? grip : ''}<div class="ss-body"><div class="ss-label">⇄ Biserie</div>${this.itemCard(it, attrs(it), withStatus, false)}${this.itemCard(nx, attrs(nx), withStatus, false)}</div></div>`;
-        i++;
+      const it = items[i]; let j = i;
+      if (it.ss) while (items[j + 1]?.ss === it.ss) j++;
+      if (j > i) {
+        const g = items.slice(i, j + 1);
+        h += `<div class="ss-group" data-rid="ss:${it.ss}">${canSort ? grip : ''}<div class="ss-body"><div class="ss-label">⇄ ${DB.ssName(g.length)}</div>${g.map(x => this.itemCard(x, attrs(x), withStatus, editable)).join('')}</div></div>`;
+        i = j;
       } else h += this.itemCard(it, attrs(it), withStatus, canSort);
     }
     return h;
   },
-  units(items) { let n = 0; for (let i = 0; i < items.length; i++) { n++; if (items[i].ss && items[i + 1]?.ss === items[i].ss) i++; } return n; },
+  units(items) { let n = 0; for (let i = 0; i < items.length; i++) { n++; if (items[i].ss) while (items[i + 1]?.ss === items[i].ss) i++; } return n; },
   // cardio: bloques de minutos + intensidad
   cardioTable(rows, type, phRows, ro) {
     const dis = ro ? ' disabled' : '';
@@ -1091,7 +1131,7 @@ Views.rutina = {
     const TAGS = { rest: '<span class="dstate rst">Descanso</span>', miss: '<span class="dstate miss">Falta</span>', excused: '<span class="dstate excused">Justificada</span>' };
     for (let i = 0; i < 7; i++) {
       const date = U.addDays(mon, i), items = DB.day(date), st = states[i].s;
-      const canSort = !isPast(date) && UI.units(items) > 1, note = Store.data.notes?.[date];
+      const canSort = !isPast(date), note = Store.data.notes?.[date];
       h += `<div class="col ${date === today ? 'today' : ''}" data-sort-date="${date}">
         <div class="col-head"><b>${DAYS_S[i]} ${U.parse(date).getDate()}</b>${TAGS[st] || ''}</div>
         ${st === 'miss' ? `<button class="btn sm soft excuse" data-act="excuse" data-date="${date}">Justificar falta</button>` : ''}
@@ -1160,8 +1200,9 @@ Views.progreso = {
     const p = Perf.calc(); this._p = p;
     const mon = U.monday(U.today()), sun = U.addDays(mon, 6);
     const tot = Gym.totals(), wDays = Gym.week(mon), wk = Gym.count(wDays), n = Gym.current(), faltas = Gym.recent();
-    const all = Perf.score(), sc = Perf.score(mon, sun), stot = all.g + all.r;
-    const cAll = Perf.cardio(), cWeek = Perf.cardio(mon, sun);
+    const all = Perf.scoreTotal(), sc = Perf.score(mon, sun), stot = all.g + all.r;
+    const cAll = Perf.cardioTotal(), cWeek = Perf.cardio(mon, sun), rs = Store.data.account.resets || {};
+    const resetRow = (k, r) => `<div class="row between reset-row"><span class="muted small">${r ? 'Desde el ' + U.fmtY(r.d) : ''}</span><button class="btn sm ghost" data-act="stats-reset" data-k="${k}">↺ Restablecer</button></div>`;
     const favs = Store.data.exercises.filter(e => e.pinned);
     const plural = (k, a, b) => `${k} ${k === 1 ? a : b}`;
     const SYM = { gym: '✓', rest: '–', miss: '✕', excused: 'J', today: '•' };
@@ -1177,9 +1218,9 @@ Views.progreso = {
       <div class="card"><div class="row between" style="margin-bottom:10px"><h3 style="margin:0">Objetivos del día cumplidos</h3><span class="tag" style="--c:var(--muted)"><span class="up">${sc.g}</span> · <span class="down">${sc.r}</span> esta semana</span></div>
         <div class="score"><div class="g"><b>${all.g}</b><span>En verde (= o +)</span></div><div class="r"><b>${all.r}</b><span>En rojo (−)</span></div></div>
         <div class="split">${stot ? `<i style="width:${all.g / stot * 100}%;background:var(--ok)"></i><i style="width:${all.r / stot * 100}%;background:var(--bad)"></i>` : ''}</div>
-</div>
+        ${resetRow('score', rs.score)}</div>
       <div class="card"><div class="row between" style="margin-bottom:10px"><h3 style="margin:0">Duración total en cardio</h3><span class="tag" style="--c:var(--cardio)">${U.dur(cWeek)} esta semana</span></div>
-        <div class="big cardio">${U.dur(cAll)}</div></div>
+        <div class="big cardio">${U.dur(cAll)}</div>${resetRow('cardio', rs.cardio)}</div>
       <div class="card"><h3>Rendimiento · últimas ${WEEKS_SHOWN} semanas</h3>${Perf.explain(p)}<canvas class="chart" id="idx-chart"></canvas>
         <div class="hint">Basado en el peso y las repeticiones de tus series.</div></div>
       <div class="card"><h3>Volumen semanal (kg)</h3><canvas class="chart" id="vol-chart"></canvas>
@@ -1212,9 +1253,8 @@ Views.ajustes = {
     return `<h2>Ajustes</h2>
       <div class="card"><div class="profile-head">${UI.avatar('lg')}<div class="grow"><h3 style="margin:0">@${U.esc(pr.username || '')}</h3>
         <div class="muted small" style="margin-top:3px">${U.esc(pr.email || '')}</div><div class="muted small">Alta el ${U.fmtY(Store.data.account.createdAt)}</div></div></div>
-        <div class="row wrap mt"><button class="btn sm" data-act="avatar-pick">${pr.avatar ? 'Cambiar foto' : 'Añadir foto'}</button>${pr.avatar ? '<button class="btn sm ghost" data-act="avatar-del">Quitar foto</button>' : ''}<button class="btn sm" data-act="user-change">Cambiar nombre de usuario</button><button class="btn sm" data-act="export-csv">Exportar datos (CSV)</button></div>
-        <div class="row wrap mt"><button class="btn sm" data-act="pw-change">Cambiar contraseña</button><button class="btn sm ghost danger" data-act="logout">Cerrar sesión</button></div>
-        <div class="row wrap mt"><button class="btn sm ghost danger" data-act="account-del">Borrar mi cuenta</button></div>
+        <div class="row wrap mt"><button class="btn sm" data-act="avatar-pick">${pr.avatar ? 'Cambiar foto' : 'Añadir foto'}</button>${pr.avatar ? '<button class="btn sm ghost" data-act="avatar-del">Quitar foto</button>' : ''}<button class="btn sm" data-act="user-change">Cambiar nombre de usuario</button></div>
+        <div class="row wrap mt"><button class="btn sm" data-act="pw-change">Cambiar contraseña</button><button class="btn sm" data-act="export-csv">Exportar datos (CSV)</button><button class="btn sm ghost danger" data-act="logout">Cerrar sesión</button><button class="btn sm del-account" data-act="account-del">Borrar mi cuenta</button></div>
         <input type="file" id="avatar-file" accept="image/*" hidden data-ch="avatar-file"></div>
       <div class="card"><h3>Días de gym por semana</h3>
         <div class="seg goal-seg">${[1, 2, 3, 4, 5, 6, 7].map(k => `<button class="${k === n ? 'on' : ''}" data-act="goal" data-v="${k}">${k}</button>`).join('')}</div>
@@ -1282,8 +1322,8 @@ const ItemSheet = {
   draw() {
     const box = $('#its'), it = this.get(); if (!box) return;
     if (!it) { box.innerHTML = UI.head('Ejercicio quitado'); return; }
-    const list = this.list(), mate = DB.partner(list, it);
-    if (mate) return this.drawSS(box, ...(list.indexOf(it) < list.indexOf(mate) ? [it, mate] : [mate, it]));
+    const group = DB.mates(this.list(), it);
+    if (group.length > 1) return this.drawSS(box, group);
     const r = ui.item, ex = DB.ex(it.exerciseId), isTpl = r.kind === 'tpl', cardio = DB.isCardio(ex);
     const ro = this.ro(), sub = isTpl ? `${U.esc(DB.tpl(r.tid).name)} · ${DAYS[r.d]}` : U.fmtLong(r.date) + (ro ? ' · solo lectura' : '');
     let h = `${UI.head(U.esc(DB.exName(it.exerciseId)), sub)}
@@ -1300,24 +1340,24 @@ const ItemSheet = {
          <button class="btn ghost danger block" data-act="item-del">${isTpl ? 'Quitar de la rutina' : 'Quitar del día'}</button>`;
     box.innerHTML = h;
   },
-  // biserie: los dos ejercicios en la misma ficha, con las series intercaladas
-  drawSS(box, a, b) {
-    const r = ui.item, isTpl = r.kind === 'tpl', ro = this.ro(), exA = DB.ex(a.exerciseId), exB = DB.ex(b.exerciseId);
+  // biserie/triserie: los ejercicios en la misma ficha, con las series intercaladas
+  drawSS(box, group) {
+    const r = ui.item, isTpl = r.kind === 'tpl', ro = this.ro(), L = 'ABC', n = group.length, name = DB.ssName(n);
     const sub = (isTpl ? `${U.esc(DB.tpl(r.tid).name)} · ${DAYS[r.d]}` : U.fmtLong(r.date)) + (ro ? ' · solo lectura' : '');
-    const who = (it, ex, k) => `<div class="ss-who"><i class="ssk ${k.toLowerCase()}">${k}</i><span class="dot" style="background:${DB.color(it.exerciseId)}"></span><b>${U.esc(DB.exName(it.exerciseId))}</b><span class="muted small">${LOADS[ex?.load || 'kg'].name}</span>${isTpl ? '' : UI.status(DB.status(it))}</div>`;
-    let h = `${UI.head('⇄ Biserie', sub)}
-      <div class="card" style="padding:12px 14px">${who(a, exA, 'A')}${who(b, exB, 'B')}
-        <div class="hint">Haz una serie de A y justo después una de B; luego descansa.</div></div>
-      <div class="card sec-plan"><div class="sec-title"><h3>Previsto</h3></div>${UI.ssTable(a, b, 'plan', ro)}</div>`;
+    const who = (it, j) => { const ex = DB.ex(it.exerciseId); return `<div class="ss-who" data-rid="${it.id}">${ro ? '' : '<span class="grip" data-act="grip" title="Arrastra para cambiar el orden" aria-label="Reordenar">⠿</span>'}<i class="ssk ${L[j].toLowerCase()}">${L[j]}</i><span class="dot" style="background:${DB.color(it.exerciseId)}"></span><b>${U.esc(DB.exName(it.exerciseId))}</b><span class="muted small">${LOADS[ex?.load || 'kg'].name}</span>${isTpl ? '' : UI.status(DB.status(it))}${ro ? '' : `<button class="icon-btn" data-act="ss-out" data-id="${it.id}" title="Sacar de la ${name.toLowerCase()}" aria-label="Sacar">✕</button>`}</div>`; };
+    let h = `${UI.head('⇄ ' + name, sub)}
+      <div class="card ss-whos" data-sort-ss="1" style="padding:8px 12px">${group.map(who).join('')}</div>
+      <div class="card sec-plan"><div class="sec-title"><h3>Previsto</h3></div>${UI.ssTable(group, 'plan', ro)}</div>`;
     if (!isTpl) {
-      const la = DB.last(a.exerciseId, r.date), lb = DB.last(b.exerciseId, r.date);
-      const last = (l, ex, k) => l ? `<div>${k} · última vez (${U.fmt(l.date)}): ${l.sets.map(s => DB.setText(ex, s)).join(' · ')}</div>` : '';
+      const last = group.map((g, j) => { const l = DB.last(g.exerciseId, r.date), ex = DB.ex(g.exerciseId); return l ? `<div>${L[j]} · última vez (${U.fmt(l.date)}): ${l.sets.map(s => DB.setText(ex, s)).join(' · ')}</div>` : ''; }).join('');
       h += `<div class="card sec-done"><div class="sec-title"><h3>Realizado</h3>${ro ? '' : '<button class="btn sm" data-act="copy-plan" data-x="both">Igual que lo previsto</button>'}</div>
-        <div class="hint" style="margin-top:0">${last(la, exA, 'A') + last(lb, exB, 'B') || 'Primera vez con estos ejercicios'}</div>
-        ${UI.ssTable(a, b, 'log', ro)}</div>`;
+        <div class="hint" style="margin-top:0">${last || 'Primera vez con estos ejercicios'}</div>
+        ${UI.ssTable(group, 'log', ro)}</div>`;
     }
+    const todos = n === 3 ? 'los tres' : 'los dos';
     h += ro ? '<div class="hint" style="text-align:center">Este día ya ha pasado: puedes verlo, pero no modificarlo.</div>'
-      : `<div class="row"><button class="btn grow" data-act="ss-split">Separar biserie</button><button class="btn ghost danger grow" data-act="ss-del">${isTpl ? 'Quitar los dos' : 'Quitar los dos del día'}</button></div>`;
+      : `${n < DB.SS_MAX ? '<button class="btn block" data-act="ss-make" style="margin-bottom:8px">⇄ Añadir otro ejercicio (triserie)</button>' : ''}
+         <div class="row"><button class="btn grow" data-act="ss-split">Separar ${name.toLowerCase()}</button><button class="btn ghost danger grow" data-act="ss-del">${isTpl ? 'Quitar ' + todos : 'Quitar ' + todos + ' del día'}</button></div>`;
     box.innerHTML = h;
   }
 };
@@ -1330,7 +1370,7 @@ const TemplateEditor = {
     box.innerHTML = `${UI.head('Rutina prefabricada')}
       <label class="field">Nombre<input value="${U.esc(t.name)}" data-in="tpl-name" placeholder="Ej. Torso / Pierna"></label>
       <div class="card mt">${t.days.map((items, d) => `<div class="tpl-day" data-sort-tpl="${d}"><b>${DAYS[d]}</b>
-        ${items.length ? UI.dayItems(items, it => `data-act="tpl-item" data-d="${d}" data-id="${it.id}"`, false, UI.units(items) > 1) : '<div class="muted small" style="margin-top:4px">Descanso</div>'}
+        ${items.length ? UI.dayItems(items, it => `data-act="tpl-item" data-d="${d}" data-id="${it.id}"`, false, true) : '<div class="muted small" style="margin-top:4px">Descanso</div>'}
         <button class="btn add" data-act="tpl-add" data-d="${d}">+ Añadir ejercicio</button></div>`).join('')}</div>
       <button class="btn primary block" data-act="modal-close">Listo</button>`;
   }
@@ -1502,7 +1542,7 @@ const H = {
   dstog: el => { if (ItemSheet.ro() || DB.isBW(DB.ex(rowItem(el)?.exerciseId))) return; const s = rowsFor(el)?.[+el.dataset.s]; if (!s || !s.f) return; s.ds = !s.ds; Store.save(); ItemSheet.draw(); },
   'row-add': el => {
     if (ItemSheet.ro()) return;
-    const it = curItem(), targets = el.dataset.x === 'both' ? [it, DB.partner(ItemSheet.list(), it)].filter(Boolean) : [rowItem(el)];
+    const it = curItem(), targets = el.dataset.x === 'both' ? DB.mates(ItemSheet.list(), it) : [rowItem(el)];
     let any = false; for (const t of targets) any = addRow(t, el.dataset.t) || any;
     if (any) { Store.save(); ItemSheet.draw(); }
   },
@@ -1516,7 +1556,7 @@ const H = {
   },
   'copy-plan': el => {
     if (ItemSheet.ro()) return;
-    const it = curItem(), items = el?.dataset.x === 'both' ? [it, DB.partner(ItemSheet.list(), it)].filter(Boolean) : [it];
+    const it = curItem(), items = el?.dataset.x === 'both' ? DB.mates(ItemSheet.list(), it) : [it];
     if (items.some(x => DB.validSets(x.log).length) && !confirm('¿Sustituir lo realizado por lo previsto?')) return;
     for (const x of items) { const ex = DB.ex(x.exerciseId); x.log = x.plan.map(s => DB.copyRow(ex, s)); }
     Store.save(); ItemSheet.draw();
@@ -1524,32 +1564,55 @@ const H = {
   // biseries
   'ss-make': () => {
     if (ItemSheet.ro()) return;
-    const it = curItem(), cands = ItemSheet.list().filter(x => x.id !== it.id && !x.ss && !DB.isCardio(DB.ex(x.exerciseId)));
-    if (!cands.length) return UI.toast('Añade otro ejercicio de fuerza a este día para hacer una biserie');
-    UI.open(`${UI.head('Hacer biserie con…', U.esc(DB.exName(it.exerciseId)))}
+    const it = curItem(), g = DB.mates(ItemSheet.list(), it);
+    if (g.length >= DB.SS_MAX) return UI.toast(`Máximo ${DB.SS_MAX} ejercicios por serie compuesta`);
+    const cands = ItemSheet.list().filter(x => !x.ss && x.id !== it.id && !DB.isCardio(DB.ex(x.exerciseId)));
+    if (!cands.length) return UI.toast('Añade otro ejercicio de fuerza a este día para juntarlo');
+    const last = g.length ? g[g.length - 1] : it;
+    UI.open(`${UI.head(g.length ? 'Hacer triserie con…' : 'Hacer biserie con…', g.map(x => U.esc(DB.exName(x.exerciseId))).join(' + ') || U.esc(DB.exName(it.exerciseId)))}
       ${cands.map(c => `<div class="list-item clickable" data-act="ss-pick" data-id="${c.id}"><span class="dot" style="background:${DB.color(c.exerciseId)}"></span>
         <div class="grow bold">${U.esc(DB.exName(c.exerciseId))}</div><span style="color:var(--accent);font-weight:800">Unir</span></div>`).join('')}
-      <div class="hint">El ejercicio elegido se colocará justo después de ${U.esc(DB.exName(it.exerciseId))}.</div>`);
+      <div class="hint">El ejercicio elegido se colocará justo después de ${U.esc(DB.exName(last.exerciseId))}. Luego puedes cambiar el orden arrastrando ⠿.</div>`);
   },
   'ss-pick': el => {
     const list = ItemSheet.list(), it = curItem(), other = list.find(x => x.id === el.dataset.id); if (!it || !other) return;
-    list.splice(list.indexOf(other), 1); list.splice(list.indexOf(it) + 1, 0, other);
-    it.ss = other.ss = U.uid(); DB.fixSS(list);
-    Store.save(); UI.close(); ItemSheet.draw(); UI.toast('Biserie creada');
+    const g = DB.mates(list, it), last = g.length ? g[g.length - 1] : it, ss = it.ss || U.uid();
+    if (g.length >= DB.SS_MAX) return;
+    list.splice(list.indexOf(other), 1); list.splice(list.indexOf(last) + 1, 0, other);
+    it.ss = other.ss = ss; DB.fixSS(list);
+    Store.save(); UI.close(); ItemSheet.draw(); UI.toast(DB.ssName(DB.mates(list, it).length) + ' creada');
   },
   'ss-split': () => {
     if (ItemSheet.ro()) return;
-    const it = curItem(), mate = DB.partner(ItemSheet.list(), it); delete it.ss; if (mate) delete mate.ss;
-    Store.save(); ItemSheet.draw(); UI.toast('Biserie separada');
+    const g = DB.mates(ItemSheet.list(), curItem()); g.forEach(x => delete x.ss);
+    Store.save(); ItemSheet.draw(); UI.toast(DB.ssName(g.length) + ' separada');
+  },
+  'ss-out': el => {   // saca un ejercicio del grupo (una triserie pasa a biserie; una biserie se separa)
+    if (ItemSheet.ro()) return;
+    const list = ItemSheet.list(), x = list.find(i => i.id === el.dataset.id), g = DB.mates(list, x); if (!x) return;
+    const rest = g.filter(i => i !== x);
+    delete x.ss; list.splice(list.indexOf(x), 1); list.splice(list.indexOf(rest[rest.length - 1]) + 1, 0, x);   // queda justo después del grupo
+    DB.fixSS(list);
+    if (ui.item.id === x.id && rest.length > 1) ui.item.id = rest[0].id;   // la ficha sigue mostrando el grupo
+    Store.save(); ItemSheet.draw(); UI.toast(rest.length > 1 ? 'Ahora es una biserie' : 'Biserie separada');
   },
   'ss-del': () => {
     if (ItemSheet.ro()) return;
-    const r = ui.item, it = curItem(), mate = DB.partner(ItemSheet.list(), it);
-    if (!confirm(`¿Quitar los dos ejercicios de la biserie${r.kind === 'tpl' ? ' de la rutina' : ' del día? Se borra también lo que hayas apuntado'}?`)) return;
-    const ids = new Set([it.id, mate?.id]);
+    const r = ui.item, g = DB.mates(ItemSheet.list(), curItem());
+    if (!confirm(`¿Quitar ${g.length === 3 ? 'los tres' : 'los dos'} ejercicios de la ${DB.ssName(g.length).toLowerCase()}${r.kind === 'tpl' ? ' de la rutina' : ' del día? Se borra también lo que hayas apuntado'}?`)) return;
+    const ids = new Set(g.map(x => x.id));
     if (r.kind === 'tpl') { const t = DB.tpl(r.tid); t.days[r.d] = t.days[r.d].filter(i => !ids.has(i.id)); }
     else { Store.data.days[r.date] = DB.day(r.date).filter(i => !ids.has(i.id)); if (!Store.data.days[r.date].length) delete Store.data.days[r.date]; }
     Store.save(); H['modal-close']();
+  },
+  'stats-reset': el => {
+    const k = el.dataset.k, cardio = k === 'cardio';
+    UI.ask('Restablecer', `El total ${cardio ? 'de cardio' : 'de objetivos cumplidos'} volverá a empezar desde cero. Lo de esta semana y tus entrenos no se tocan.<br><br>¿Restablecer?`, () => {
+      const d = U.today(), a = Store.data.account; a.resets ||= {};
+      if (cardio) a.resets.cardio = { d, m: Perf.cardio(d, d) };
+      else { const s = Perf.score(d, d); a.resets.score = { d, g: s.g, r: s.r }; }
+      Store.save(); App.render(); UI.toast('Contador restablecido');
+    }, 'Restablecer');
   },
   // nota del día
   'note-open': el => Notes.open(el.dataset.date),
@@ -1805,7 +1868,7 @@ const Look = {
 const Reorder = {
   init() { document.addEventListener('pointerdown', e => { const g = e.target.closest('.grip'); if (g) this.start(e, g); }); },
   start(e, grip) {
-    const item = grip.closest('.item, .ss-group'), box = item?.parentElement; if (!box) return;
+    const item = grip.closest('.ss-who, .item, .ss-group'), box = item?.parentElement; if (!box) return;
     e.preventDefault(); e.stopPropagation();
     this.item = item; this.box = box; this.before = this.order(); this.pid = e.pointerId;
     item.classList.add('lifted'); document.body.classList.add('sorting');
@@ -1818,7 +1881,7 @@ const Reorder = {
     };
     addEventListener('pointermove', move, { passive: false }); addEventListener('pointerup', end); addEventListener('pointercancel', end);
   },
-  items() { return [...this.box.querySelectorAll(':scope > .item, :scope > .ss-group')]; },
+  items() { return [...this.box.querySelectorAll(':scope > .item, :scope > .ss-group, :scope > .ss-who')]; },
   order() { return this.items().map(x => x.dataset.rid); },
   // el ejercicio cambia de hueco al pasar por la mitad del de al lado
   move(y) {
@@ -1833,14 +1896,21 @@ const Reorder = {
   end() {
     this.item.classList.remove('lifted'); document.body.classList.remove('sorting');
     const ids = this.order(); if (ids.join() === this.before.join()) return;
-    let list;
-    if (this.box.dataset.sortDate) list = Store.data.days[this.box.dataset.sortDate];
-    else if (this.box.dataset.sortTpl != null) list = DB.tpl(ui.tplId)?.days[+this.box.dataset.sortTpl];
+    let list, sheet = false;
+    const host = this.box.closest('[data-sort-date], [data-sort-tpl], [data-sort-ss]');
+    if (host?.dataset.sortSs) { list = ItemSheet.list(); sheet = true; }
+    else if (host?.dataset.sortDate) list = Store.data.days[host.dataset.sortDate];
+    else if (host?.dataset.sortTpl != null) list = DB.tpl(ui.tplId)?.days[+host.dataset.sortTpl];
     if (!list) return;
-    const order = [];   // una biserie ("ss:id") se expande a sus dos ejercicios, en su orden
+    // ids en su nuevo orden (un grupo "ss:id" se expande a sus ejercicios); solo se recolocan esos, en los huecos que ocupaban
+    const order = [];
     for (const id of ids) { if (id.startsWith('ss:')) list.filter(x => x.ss === id.slice(3)).forEach(x => order.push(x.id)); else order.push(id); }
-    list.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id)); DB.fixSS(list);
+    const items = order.map(id => list.find(x => x.id === id)).filter(Boolean);
+    const slots = items.map(x => list.indexOf(x)).sort((a, b) => a - b);
+    slots.forEach((k, n) => { list[k] = items[n]; });
+    DB.fixSS(list);
     Store.save(); UI.toast('Orden actualizado');
+    if (sheet) ItemSheet.draw(); else if (this.box.classList.contains('ss-body')) App.render();
   }
 };
 
@@ -1960,16 +2030,16 @@ const Export = {
     return /[;"\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   },
   rows() {
-    const d = Store.data, out = [['Fecha', 'Día', 'Ejercicio', 'Grupo', 'Músculo', 'Tipo de carga', 'Previsto/Realizado', 'Serie', 'Peso', 'Reps', 'Fallo', 'Drop set', 'Minutos', 'Intensidad', 'Estado', 'Biserie', 'Nota del día']];
+    const d = Store.data, out = [['Fecha', 'Día', 'Ejercicio', 'Grupo', 'Músculo', 'Tipo de carga', 'Previsto/Realizado', 'Serie', 'Peso', 'Reps', 'Fallo', 'Drop set', 'Minutos', 'Intensidad', 'Estado', 'Biserie/Triserie', 'Nota del día']];
     const dates = [...new Set([...Object.keys(d.days || {}), ...Object.keys(d.notes || {})])].sort();
     for (const date of dates) {
       const items = d.days[date] || [], n = d.notes?.[date], dia = DAYS[U.dow(date)];
       const note = n ? [n.r ? n.r + '/5' : '', n.t || ''].filter(Boolean).join(' · ') : '';
       if (!items.length) { out.push([date, dia, '', '', '', '', '', '', '', '', '', '', '', '', '', '', note]); continue; }
       for (const it of items) {
-        const ex = DB.ex(it.exerciseId), g = ex ? DB.group(ex.group).name : '', st = DB.status(it), mate = DB.partner(items, it);
+        const ex = DB.ex(it.exerciseId), g = ex ? DB.group(ex.group).name : '', st = DB.status(it), mates = DB.mates(items, it).filter(x => x !== it);
         const base = [date, dia, DB.exName(it.exerciseId), g, ex?.muscle || '', LOADS[ex?.load || 'kg']?.name || ''];
-        const estado = st === '-' ? '−' : st || '', bis = mate ? 'Sí, con ' + DB.exName(mate.exerciseId) : '';
+        const estado = st === '-' ? '−' : st || '', bis = mates.length ? DB.ssName(mates.length + 1) + ' con ' + mates.map(x => DB.exName(x.exerciseId)).join(' y ') : '';
         for (const [k, label] of [['plan', 'Previsto'], ['log', 'Realizado']]) (it[k] || []).forEach((s, i) => {
           if (k === 'log' && !DB.done(s)) return;   // series realizadas vacías no se exportan
           const cardio = DB.isCardio(ex), noW = cardio || DB.isBW(ex);

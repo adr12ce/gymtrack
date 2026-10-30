@@ -365,6 +365,8 @@ input:focus,select:focus,textarea:focus{outline:2px solid color-mix(in srgb,var(
 :root[data-theme="dark"] .col{box-shadow:inset 0 0 0 1px var(--line)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .col{box-shadow:inset 0 0 0 1px var(--line)}}
 .col.today{border:none;box-shadow:inset 0 0 0 2px var(--accent),var(--shadow)}
+:root[data-theme="dark"] .col.today{box-shadow:inset 0 0 0 2px var(--accent)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .col.today{box-shadow:inset 0 0 0 2px var(--accent)}}
 .col-head{padding:2px 4px 6px}
 .col-head b{font-size:15px;letter-spacing:-.01em}
 .item{border-left:none;box-shadow:inset 3px 0 0 var(--c);padding:11px 10px 11px 13px;border-radius:12px;margin-top:8px;transition:background .15s}
@@ -373,6 +375,9 @@ input:focus,select:focus,textarea:focus{outline:2px solid color-mix(in srgb,var(
 .grip{color:color-mix(in srgb,var(--muted) 70%,transparent);margin:-11px -2px -11px -6px}
 .grip .ic{width:16px;height:16px}
 .st{width:26px;height:26px;font-size:15px}
+.st svg{width:52%;height:52%;display:block}
+.ex-search{margin-bottom:12px}
+.note-read{white-space:pre-wrap;line-height:1.5;margin:12px 0 0}
 /* biseries: recuadro tintado, sin línea discontinua */
 .ss-group{border:none;background:color-mix(in srgb,var(--accent) 6%,var(--card));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 22%,transparent);padding:8px 8px 8px 4px;border-radius:16px;margin-top:8px}
 .ss-label{display:flex;align-items:center;gap:5px;letter-spacing:.06em;font-size:10.5px;padding:0 4px}
@@ -395,7 +400,18 @@ input:focus,select:focus,textarea:focus{outline:2px solid color-mix(in srgb,var(
 .daystrip .is-today b{background:var(--accent);color:#fff}
 .daystrip .is-today span{color:var(--accent-text)}
 .daystrip button:active{background:var(--card-2)}
-@media(max-width:1179px){.week{grid-auto-columns:min(80vw,330px);scroll-snap-type:x mandatory}}
+/* el día de hoy destaca: más ancho y con letra mayor; el resto algo más compacto */
+.week{display:flex;align-items:flex-start}
+.week > .col{flex:1 1 0;min-width:0}
+.week > .col.today{flex-grow:1.45}
+.col:not(.today) .col-head b{font-size:14px}
+.col:not(.today) .item{padding:9px 9px 9px 12px}
+.col:not(.today) .item .name{font-size:13px}
+.col.today .col-head b{font-size:19px;letter-spacing:-.02em}
+.col.today .item{padding:13px 12px 13px 15px}
+.col.today .item .name{font-size:15.5px}
+.col.today .st{width:30px;height:30px}
+@media(max-width:1179px){.week{scroll-snap-type:x mandatory}.week > .col{flex:none;width:min(68vw,280px)}.week > .col.today{width:min(84vw,350px)}}
 @media(min-width:1180px){.daystrip{display:none}}
 .item .meta{font-size:12px;margin-top:2px}
 /* filtros en una sola línea deslizable */
@@ -1070,7 +1086,7 @@ const UI = {
       <div class="row"><button class="btn grow" data-act="modal-close">No</button><button class="btn primary grow" data-act="ask-yes">Sí</button></div>`);
   },
   fav(ex) { return `<button class="icon-btn fav" data-act="fav" data-id="${U.esc(ex.id)}" title="${ex.pinned ? 'Quitar de favoritos' : 'Añadir a favoritos'}" aria-label="Favorito" aria-pressed="${!!ex.pinned}">${I('heart', ex.pinned ? 'filled' : '')}</button>`; },
-  status(s) { if (!s) return ''; const sym = s === '+' ? '+' : s === '-' ? '−' : '='; return `<span class="st ${s === '-' ? 'bad' : 'good'}" title="${s === '+' ? 'Mejor que lo previsto' : s === '-' ? 'Peor que lo previsto' : 'Igual que lo previsto'}">${sym}</span>`; },
+  status(s) { if (!s) return ''; const sym = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">${s === '+' ? '<path d="M12 6v12M6 12h12"/>' : s === '-' ? '<path d="M6 12h12"/>' : '<path d="M6 9h12M6 15h12"/>'}</svg>`; return `<span class="st ${s === '-' ? 'bad' : 'good'}" title="${s === '+' ? 'Mejor que lo previsto' : s === '-' ? 'Peor que lo previsto' : 'Igual que lo previsto'}">${sym}</span>`; },
   groupChips(active, act, withFav) {
     const list = [{ id: 'Todos', name: 'Todos' }, ...GROUPS, ...(withFav ? [{ id: 'fav', name: I('heart', 'filled sm') + 'Favoritos' }] : [])];
     return list.map(g => `<button class="chip ${g.id === active ? 'on' : ''}" data-act="${act}" data-g="${g.id}">${g.color ? `<span class="dot" style="background:${g.color}"></span>` : ''}${g.name}</button>`).join('');
@@ -1140,7 +1156,7 @@ const UI = {
       if (it.ss) while (items[j + 1]?.ss === it.ss) j++;
       if (j > i) {
         const g = items.slice(i, j + 1);
-        h += `<div class="ss-group" data-rid="ss:${it.ss}">${canSort ? grip : ''}<div class="ss-body"><div class="ss-label">${I('link')}${DB.ssName(g.length)}</div>${g.map(x => this.itemCard(x, attrs(x), withStatus, editable)).join('')}</div></div>`;
+        h += `<div class="ss-group" data-rid="ss:${it.ss}">${canSort ? grip : ''}<div class="ss-body"><div class="ss-label">${I('link')}${DB.ssName(g.length)}</div>${g.map(x => this.itemCard(x, attrs(x), withStatus ? 'bare' : false, editable)).join('')}</div></div>`;
         i = j;
       } else h += this.itemCard(it, attrs(it), withStatus, canSort);
     }
@@ -1162,14 +1178,14 @@ const UI = {
   itemCard(it, attrs, withStatus, grip) {   // withStatus = horario semanal: nombre + estado, sin lo previsto · grip = se puede reordenar
     const ex = DB.ex(it.exerciseId), st = withStatus ? DB.status(it) : null;
     return `<div class="item" style="--c:${DB.color(it.exerciseId)}" data-rid="${it.id}" ${attrs}>${grip ? `<span class="grip" data-act="grip" title="Arrastra para cambiar el orden" aria-label="Reordenar">${I('grip')}</span>` : ''}
-      <div class="grow"><div class="name">${U.esc(DB.exName(it.exerciseId))}</div><div class="meta">${U.esc(withStatus ? this.planShort(ex, it.plan) : DB.planText(ex, it.plan))}</div></div>${this.status(st)}</div>`;
+      <div class="grow"><div class="name">${U.esc(DB.exName(it.exerciseId))}</div>${withStatus === 'bare' ? '' : `<div class="meta">${U.esc(withStatus ? this.planShort(ex, it.plan) : DB.planText(ex, it.plan))}</div>`}</div>${this.status(st)}</div>`;
   },
   // resumen corto: "3 series · 80 kg" / "20 min"
   planShort(ex, plan) {
     if (!plan?.length) return '';
     if (DB.isCardio(ex)) return U.dur(plan.reduce((a, x) => a + (x.m || 0), 0));
-    const w = Math.max(0, ...plan.map(x => x.w || 0)), n = plan.length;
-    return `${n} ${n === 1 ? 'serie' : 'series'}${w && !DB.isBW(ex) ? ' · ' + DB.load(ex, w) : ''}`;
+    const n = plan.length;
+    return `${n} ${n === 1 ? 'serie' : 'series'}`;
   }
 };
 
@@ -1311,8 +1327,8 @@ Views.rutina = {
         ${st === 'excused' ? `<button class="btn sm ghost excuse" data-act="excuse" data-date="${date}">Quitar justificación</button>` : ''}
         ${items.length ? UI.dayItems(items, it => `data-act="item-open" data-date="${date}" data-id="${it.id}"`, true, canSort) : (st === 'rest' ? '' : '<div class="rest">Nada previsto</div>')}
         ${isPast(date) ? '' : `<button class="btn add" data-act="day-add" data-date="${date}">+ Añadir ejercicio</button>`}
-        ${note ? `<button class="note-chip" data-act="note-open" data-date="${date}" title="Nota del día"><b>${I('note')}Nota${note.r ? ` · <span class="nstars">${'★'.repeat(note.r)}</span>` : ''}</b>${note.t ? `<span>${U.esc(note.t)}</span>` : ''}</button>`
-               : `<button class="btn add note-add" data-act="note-open" data-date="${date}">+ Añadir nota</button>`}</div>`;
+        ${note ? `<button class="note-chip" data-act="note-open" data-date="${date}" title="Nota del día"><b>${I('note')}Ver nota${note.r ? ` <span class="nstars">${'★'.repeat(note.r)}</span>` : ''}</b></button>`
+               : Notes.locked(date) ? '' : `<button class="btn add note-add" data-act="note-open" data-date="${date}">+ Añadir nota</button>`}</div>`;
     }
     return h + '</div>';
   },
@@ -1352,7 +1368,7 @@ const Drag = {
 Views.ejercicios = {
   html() {
     return `<div class="row between"><h2>Ejercicios</h2><button class="btn sm primary" data-act="ex-new">+ Nuevo</button></div>
-      <input type="search" placeholder="Buscar ejercicio…" value="${U.esc(ui.q)}" data-in="ex-q" autocomplete="off">
+      <input type="search" class="ex-search" placeholder="Buscar ejercicio…" value="${U.esc(ui.q)}" data-in="ex-q" autocomplete="off">
       <div class="chips mt">${UI.groupChips(ui.group, 'ex-g', true)}</div><div id="ex-list">${this.list()}</div>`;
   },
   list() {
@@ -1459,7 +1475,7 @@ Views.ajustes = {
 const Picker = {
   open(cb) {
     ui.pick = { cb, q: '', g: 'Todos' };
-    UI.open(`${UI.head('Añadir ejercicio')}<input type="search" placeholder="Buscar ejercicio…" data-in="pick-q" autocomplete="off">
+    UI.open(`${UI.head('Añadir ejercicio')}<input type="search" class="ex-search" placeholder="Buscar ejercicio…" data-in="pick-q" autocomplete="off">
       <div class="chips mt" id="pick-chips"></div><div id="pick-list"></div>
       <button class="btn ghost block mt" data-act="ex-new-from-pick">+ Crear ejercicio nuevo</button>`, () => this.list());
   },
@@ -1793,7 +1809,7 @@ const H = {
   },
   // nota del día
   'note-open': el => Notes.open(el.dataset.date),
-  'note-rate': el => { const v = +el.dataset.v; ui.noteR = ui.noteR === v ? 0 : v; $$('.sheet [data-act="note-rate"]').forEach(b => b.classList.toggle('on', +b.dataset.v <= ui.noteR)); },
+  'note-rate': el => { if (Notes.locked(ui.noteDate)) return; const v = +el.dataset.v; ui.noteR = ui.noteR === v ? 0 : v; $$('.sheet [data-act="note-rate"]').forEach(b => b.classList.toggle('on', +b.dataset.v <= ui.noteR)); },
   'note-save': () => Notes.save(),
   'note-del': () => Notes.remove(),
   // exportar
@@ -2178,9 +2194,18 @@ const Crop = {
 /* Nota del día: valoración del entreno (1-5) y observaciones. Se puede poner en cualquier día,
    también en los pasados (es la excepción a la regla de solo lectura), para valorar después de entrenar. */
 const Notes = {
-  MAX: 1000,
+  MAX: 1000, DAYS: 5,
+  // pasados 5 días ya no se puede añadir ni cambiar la nota (solo verla)
+  locked(date) { return U.addDays(date, this.DAYS) <= U.today(); },
   open(date) {
     const n = Store.data.notes?.[date]; ui.noteDate = date; ui.noteR = n?.r || 0;
+    if (this.locked(date)) {
+      if (!n) return;
+      return UI.open(`${UI.head('Nota del día', U.fmtLong(date) + ' · solo lectura')}
+        ${n.r ? `<div class="stars note-stars">${[1, 2, 3, 4, 5].map(v => `<span class="star ${v <= n.r ? 'on' : ''}">★</span>`).join('')}</div>` : ''}
+        ${n.t ? `<p class="note-read">${U.esc(n.t)}</p>` : ''}
+        <div class="hint">Las notas solo se pueden añadir o cambiar durante los ${this.DAYS} días siguientes al entreno.</div>`);
+    }
     UI.open(`${UI.head('Nota del día', U.fmtLong(date))}
       <div class="field">Valoración del entreno</div>
       <div class="stars note-stars">${[1, 2, 3, 4, 5].map(v => `<button class="star ${v <= ui.noteR ? 'on' : ''}" data-act="note-rate" data-v="${v}" aria-label="${v} de 5">★</button>`).join('')}</div>
@@ -2188,12 +2213,14 @@ const Notes = {
       <div class="row mt2">${n ? '<button class="btn ghost danger grow" data-act="note-del">Borrar nota</button>' : ''}<button class="btn primary grow" data-act="note-save">Guardar</button></div>`);
   },
   save() {
+    if (this.locked(ui.noteDate)) return H['modal-close']();
     const t = ($('#note-text')?.value || '').trim().slice(0, this.MAX), r = ui.noteR || null;
     if (!t && !r) return this.remove(true);
     (Store.data.notes ||= {})[ui.noteDate] = { r, t };
     Store.save(); H['modal-close'](); UI.toast('Nota guardada');
   },
   remove(silent) {
+    if (this.locked(ui.noteDate)) return H['modal-close']();
     if (Store.data.notes?.[ui.noteDate]) { delete Store.data.notes[ui.noteDate]; Store.save(); if (!silent) UI.toast('Nota borrada'); }
     H['modal-close']();
   }

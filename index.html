@@ -302,6 +302,157 @@ body.auth{padding-bottom:24px}
 .update-bar{position:fixed;top:calc(8px + env(safe-area-inset-top));left:12px;right:12px;margin:0 auto;width:fit-content;z-index:40;display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--accent);box-shadow:0 10px 30px rgba(0,0,0,.18);border-radius:14px;padding:8px 8px 8px 14px;font-size:14px;max-width:calc(100vw - 24px);animation:up .2s ease-out}
 .update-bar span{white-space:nowrap}
 .users-count{text-align:center;font-size:12.5px;color:var(--muted);margin-top:4px}
+/* =========================================================
+   DISEÑO 6.0 · minimalista
+   Fondo plano, tarjetas sin borde con sombra suave, botones tonales, más aire,
+   tipografía con más contraste de tamaños e iconos SVG. Mantiene la identidad:
+   rojo de acento, marca GymTrack, franjas de color por grupo muscular.
+   ========================================================= */
+:root{
+  --bg:#f4f4f6;--card:#ffffff;--card-2:#f1f1f4;--text:#16171d;--muted:#7b7d88;--line:#e6e6eb;
+  --shadow:0 1px 2px rgba(16,17,24,.04),0 4px 16px rgba(16,17,24,.045);
+  --r-card:22px;--r-ctl:12px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b0b0e;--card:#16171b;--card-2:#202127;--text:#f2f2f5;--muted:#9a9ba6;--line:#26272e;--shadow:none}}
+:root[data-theme="dark"]{--bg:#0b0b0e;--card:#16171b;--card-2:#202127;--text:#f2f2f5;--muted:#9a9ba6;--line:#26272e;--shadow:none}
+body{background:var(--bg)}
+.ic{width:18px;height:18px;flex:none;display:inline-block;vertical-align:-3px}
+.ic.sm{width:14px;height:14px;vertical-align:-2px}
+.ic.filled{fill:currentColor}
+/* cabecera y títulos */
+.topbar{padding:calc(12px + env(safe-area-inset-top)) 16px 12px;background:color-mix(in srgb,var(--bg) 82%,transparent)}
+.brand{font-size:21px}
+.byline{font-weight:600;letter-spacing:.01em}
+main{padding:6px 16px 28px}
+h2{font-size:34px;letter-spacing:-.045em;margin:8px 0 16px}
+h3{font-size:16px;letter-spacing:-.01em}
+.card{border:none;border-radius:var(--r-card);padding:18px;margin-bottom:14px;box-shadow:var(--shadow)}
+:root[data-theme="dark"] .card{box-shadow:inset 0 0 0 1px var(--line)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .card{box-shadow:inset 0 0 0 1px var(--line)}}
+.hint{font-size:13px}
+/* botones: tonales, sin bordes; el primario en color sólido */
+.btn{border:none;background:var(--card-2);border-radius:var(--r-ctl);font-weight:650;padding:10px 15px;transition:transform .1s,background .15s,opacity .15s}
+.btn.sm{padding:7px 11px;border-radius:10px}
+.btn.primary{background:var(--accent);box-shadow:none}
+.btn.ghost{background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.btn.soft{background:var(--accent-soft)}
+.btn.danger{color:var(--danger)}
+.btn .ic{width:16px;height:16px;vertical-align:0}
+.btn.add{border:1.5px dashed var(--line);background:transparent;box-shadow:none;border-radius:12px;padding:9px;font-weight:650}
+.btn.add:hover{color:var(--text);border-color:var(--muted)}
+.icon-btn{display:inline-grid;place-items:center;padding:7px;border-radius:10px}
+.icon-btn .ic{width:18px;height:18px;vertical-align:0}
+.fav{color:var(--muted)}.fav[aria-pressed="true"]{color:var(--accent)}
+input,select,textarea{border:1px solid transparent;border-radius:var(--r-ctl);padding:10px 12px}
+input:focus,select:focus,textarea:focus{outline:2px solid color-mix(in srgb,var(--accent) 70%,transparent);border-color:transparent}
+/* chips y etiquetas */
+.chips{gap:8px;margin-bottom:14px}
+.chip{border:none;background:var(--card);box-shadow:var(--shadow), inset 0 0 0 1px var(--line);padding:7px 13px;font-weight:650}
+.chip.on{background:var(--text);color:var(--bg);box-shadow:none}
+.chip.on .dot{box-shadow:0 0 0 2px var(--bg)}
+.tag{font-weight:700;padding:4px 10px}
+.seg{border-radius:12px}
+.seg button.on{color:var(--text)}
+/* barra de pestañas */
+.tabbar{background:color-mix(in srgb,var(--card) 88%,transparent);border-top:1px solid var(--line);padding:8px 8px calc(8px + env(safe-area-inset-bottom))}
+.tab{font-weight:650;gap:4px;padding:4px 0;transition:color .15s}
+.tab.on{background:none;color:var(--accent-text)}
+.tab svg{width:23px;height:23px;transition:transform .15s}
+.tab.on svg{transform:translateY(-1px);stroke-width:2.3}
+/* semana */
+.week{gap:12px;margin:0 -16px;padding:2px 16px 14px;scroll-padding:0 16px}
+.col{border:none;border-radius:var(--r-card);padding:12px;box-shadow:var(--shadow)}
+:root[data-theme="dark"] .col{box-shadow:inset 0 0 0 1px var(--line)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .col{box-shadow:inset 0 0 0 1px var(--line)}}
+.col.today{border:none;box-shadow:inset 0 0 0 2px var(--accent),var(--shadow)}
+.col-head{padding:2px 4px 6px}
+.col-head b{font-size:15px;letter-spacing:-.01em}
+.item{border-left:none;box-shadow:inset 3px 0 0 var(--c);padding:11px 10px 11px 13px;border-radius:12px;margin-top:8px;transition:background .15s}
+.item:hover{background:color-mix(in srgb,var(--card-2) 70%,var(--line))}
+.item .name{font-weight:650}
+.grip{color:color-mix(in srgb,var(--muted) 70%,transparent);margin:-11px -2px -11px -6px}
+.grip .ic{width:16px;height:16px}
+.st{width:26px;height:26px;font-size:15px}
+/* biseries: recuadro tintado, sin línea discontinua */
+.ss-group{border:none;background:color-mix(in srgb,var(--accent) 6%,var(--card));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 22%,transparent);padding:8px 8px 8px 4px;border-radius:16px;margin-top:8px}
+.ss-label{display:flex;align-items:center;gap:5px;letter-spacing:.06em;font-size:10.5px;padding:0 4px}
+.ss-label .ic{width:13px;height:13px}
+.ss-group .item{background:var(--card)}
+.sheet-head h3{display:flex;align-items:center;gap:8px}
+/* tira de días y semana en el móvil */
+.week-actions{gap:8px;overflow-x:auto;margin:-6px -16px 14px;padding:2px 16px;scrollbar-width:none}
+.week-actions::-webkit-scrollbar{display:none}
+.week-actions:empty{display:none}
+.daystrip{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;background:var(--card);border-radius:18px;padding:6px;margin-bottom:14px;box-shadow:var(--shadow)}
+:root[data-theme="dark"] .daystrip{box-shadow:inset 0 0 0 1px var(--line)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .daystrip{box-shadow:inset 0 0 0 1px var(--line)}}
+.daystrip button{border:none;background:none;font:inherit;color:var(--text);display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0 6px;border-radius:13px;cursor:pointer}
+.daystrip span{font-size:11px;font-weight:700;color:var(--muted)}
+.daystrip b{font-size:16px;font-weight:750;width:30px;height:30px;display:grid;place-items:center;border-radius:50%}
+.daystrip i{width:5px;height:5px;border-radius:50%;background:transparent}
+.daystrip .has i{background:var(--muted)}
+.daystrip .gym i{background:var(--ok)}.daystrip .miss i{background:var(--bad)}.daystrip .excused i{background:var(--exc)}
+.daystrip .is-today b{background:var(--accent);color:#fff}
+.daystrip .is-today span{color:var(--accent-text)}
+.daystrip button:active{background:var(--card-2)}
+@media(max-width:1179px){.week{grid-auto-columns:min(80vw,330px);scroll-snap-type:x mandatory}}
+@media(min-width:1180px){.daystrip{display:none}}
+.item .meta{font-size:12px;margin-top:2px}
+/* filtros en una sola línea deslizable */
+main .chips{flex-wrap:nowrap;overflow-x:auto;margin:0 -16px 14px;padding:2px 16px 4px;scrollbar-width:none}
+main .chips::-webkit-scrollbar{display:none}
+.chip{flex:none}
+.chip .ic{color:var(--accent)}
+/* cabeceras de tarjeta: la etiqueta baja de línea si no cabe */
+.card > .row.between,.card > .clickable > .row.between{flex-wrap:wrap;row-gap:6px}
+.tag{white-space:nowrap}
+/* nota */
+.note-chip{background:var(--card-2);border-radius:12px;padding:9px 11px}
+.note-chip b{display:flex;align-items:center;gap:5px}
+.note-chip .ic{width:14px;height:14px}
+/* tablas de series */
+.sets th{font-size:10.5px;letter-spacing:.07em;padding:6px 4px}
+.sets input,.sets select{background:var(--card-2);border-radius:11px}
+.ftog{border:none;background:var(--card-2);border-radius:11px}
+.sets input:disabled,.sets select:disabled,.ftog:disabled{border:1px dashed var(--line)}
+.sec-title h3{font-size:12px;letter-spacing:.09em}
+/* fichas (modales) */
+.modal-bg{background:rgba(8,9,14,.42);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.sheet{padding:20px 18px calc(24px + env(safe-area-inset-bottom));border-radius:26px 26px 0 0}
+@media(min-width:760px){.sheet{border-radius:26px}}
+.sheet::before{content:"";display:block;width:38px;height:5px;border-radius:3px;background:var(--line);margin:-8px auto 12px}
+@media(min-width:760px){.sheet::before{display:none}}
+.sheet-head h3{font-size:22px;letter-spacing:-.03em}
+.sheet-head .icon-btn{background:var(--card-2);border-radius:50%;width:34px;height:34px;padding:0}
+.sheet .card{box-shadow:none;background:var(--card)}
+/* listas */
+.list-item{padding:12px 0}
+.list-item .bold .ic{color:var(--accent);margin-right:5px}
+/* progreso */
+.big{font-size:48px;letter-spacing:-.05em}
+.meter,.split{height:8px;border-radius:5px}
+.meter i{background:var(--ok)}
+.weekdots span b{border-radius:10px}
+.weekdots span.gym b{background:var(--ok)}
+.weekdots span.on b{background:var(--accent)}
+.score div{border-radius:16px;padding:14px}
+.score b{font-size:34px}
+.stat{border-radius:16px;padding:13px}
+.cal-day{border-radius:14px}
+.cal-day.gym{background:var(--ok)}
+.legend{gap:12px}
+/* ajustes */
+.swatch{border:none;box-shadow:inset 0 0 0 2px var(--card),0 0 0 1px var(--line)}
+.swatch.on{box-shadow:inset 0 0 0 2px var(--card),0 0 0 2px var(--text)}
+.swatch .ic{width:16px;height:16px;stroke-width:3}
+.avatar{border:none;box-shadow:none}
+.del-account{background:var(--danger)}
+/* acceso */
+.auth-tabs{border-radius:14px}
+.auth-tabs button.on{color:var(--text)}
+.toast{border-radius:14px;font-weight:650}
+.update-bar{border:none;box-shadow:0 10px 30px rgba(0,0,0,.16),inset 0 0 0 1px var(--line)}
+@media (prefers-reduced-motion:no-preference){.card,.col{animation:fade .25s ease-out}}
 </style>
 </head>
 <body>
@@ -375,6 +526,20 @@ const WEEKS_SHOWN = 12;
 
 /* ===================== 2. UTILS ===================== */
 const $ = (s, r = document) => r.querySelector(s);
+/* iconos (trazos al estilo Lucide) */
+const IC = {
+  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  grip: '<circle cx="9" cy="6" r="1.2"/><circle cx="15" cy="6" r="1.2"/><circle cx="9" cy="12" r="1.2"/><circle cx="15" cy="12" r="1.2"/><circle cx="9" cy="18" r="1.2"/><circle cx="15" cy="18" r="1.2"/>',
+  left: '<path d="m15 18-6-6 6-6"/>', right: '<path d="m9 18 6-6-6-6"/>',
+  edit: '<path d="M21.17 6.81a1 1 0 0 0-3.99-3.98L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"/>',
+  trash: '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>',
+  reset: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  note: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>',
+  heart: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>', plus: '<path d="M5 12h14"/><path d="M12 5v14"/>'
+};
+const I = (n, cls = '') => `<svg class="ic ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const U = {
   uid: () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
@@ -884,7 +1049,7 @@ const UI = {
   },
   close() { this.stack.pop()?.remove(); if (!this.stack.length) document.body.style.overflow = ''; },
   top() { return this.stack[this.stack.length - 1]; },
-  head(title, sub = '') { return `<div class="sheet-head"><div><h3>${title}</h3>${sub ? `<div class="muted small">${sub}</div>` : ''}</div><button class="icon-btn" data-act="modal-close" aria-label="Cerrar">✕</button></div>`; },
+  head(title, sub = '') { return `<div class="sheet-head"><div><h3>${title}</h3>${sub ? `<div class="muted small">${sub}</div>` : ''}</div><button class="icon-btn" data-act="modal-close" aria-label="Cerrar">${I('x')}</button></div>`; },
   tag(ex) {
     if (!ex) return ''; const g = DB.group(ex.group);
     return `<span class="tag" style="--c:${g.color}">${U.esc(g.name)}${ex.muscle !== g.name ? ' · ' + U.esc(ex.muscle) : ''}</span>`;
@@ -904,10 +1069,10 @@ const UI = {
     this.open(`${this.head(title)}<p class="ask-text">${text}</p>
       <div class="row"><button class="btn grow" data-act="modal-close">No</button><button class="btn primary grow" data-act="ask-yes">Sí</button></div>`);
   },
-  fav(ex) { return `<button class="icon-btn fav" data-act="fav" data-id="${U.esc(ex.id)}" title="${ex.pinned ? 'Quitar de favoritos' : 'Añadir a favoritos'}" aria-label="Favorito">${ex.pinned ? '❤️' : '🤍'}</button>`; },
+  fav(ex) { return `<button class="icon-btn fav" data-act="fav" data-id="${U.esc(ex.id)}" title="${ex.pinned ? 'Quitar de favoritos' : 'Añadir a favoritos'}" aria-label="Favorito" aria-pressed="${!!ex.pinned}">${I('heart', ex.pinned ? 'filled' : '')}</button>`; },
   status(s) { if (!s) return ''; const sym = s === '+' ? '+' : s === '-' ? '−' : '='; return `<span class="st ${s === '-' ? 'bad' : 'good'}" title="${s === '+' ? 'Mejor que lo previsto' : s === '-' ? 'Peor que lo previsto' : 'Igual que lo previsto'}">${sym}</span>`; },
   groupChips(active, act, withFav) {
-    const list = [{ id: 'Todos', name: 'Todos' }, ...GROUPS, ...(withFav ? [{ id: 'fav', name: '❤️ Favoritos' }] : [])];
+    const list = [{ id: 'Todos', name: 'Todos' }, ...GROUPS, ...(withFav ? [{ id: 'fav', name: I('heart', 'filled sm') + 'Favoritos' }] : [])];
     return list.map(g => `<button class="chip ${g.id === active ? 'on' : ''}" data-act="${act}" data-g="${g.id}">${g.color ? `<span class="dot" style="background:${g.color}"></span>` : ''}${g.name}</button>`).join('');
   },
   filterEx(group, q) {
@@ -967,7 +1132,7 @@ const UI = {
   },
   // ejercicios de un día: las biseries/triseries van agrupadas en un recuadro
   dayItems(items, attrs, withStatus, editable) {
-    const grip = '<span class="grip" data-act="grip" title="Arrastra para cambiar el orden" aria-label="Reordenar">⠿</span>';
+    const grip = `<span class="grip" data-act="grip" title="Arrastra para cambiar el orden" aria-label="Reordenar">${I('grip')}</span>`;
     const canSort = editable && this.units(items) > 1;
     let h = '';
     for (let i = 0; i < items.length; i++) {
@@ -975,7 +1140,7 @@ const UI = {
       if (it.ss) while (items[j + 1]?.ss === it.ss) j++;
       if (j > i) {
         const g = items.slice(i, j + 1);
-        h += `<div class="ss-group" data-rid="ss:${it.ss}">${canSort ? grip : ''}<div class="ss-body"><div class="ss-label">⇄ ${DB.ssName(g.length)}</div>${g.map(x => this.itemCard(x, attrs(x), withStatus, editable)).join('')}</div></div>`;
+        h += `<div class="ss-group" data-rid="ss:${it.ss}">${canSort ? grip : ''}<div class="ss-body"><div class="ss-label">${I('link')}${DB.ssName(g.length)}</div>${g.map(x => this.itemCard(x, attrs(x), withStatus, editable)).join('')}</div></div>`;
         i = j;
       } else h += this.itemCard(it, attrs(it), withStatus, canSort);
     }
@@ -996,8 +1161,15 @@ const UI = {
   },
   itemCard(it, attrs, withStatus, grip) {   // withStatus = horario semanal: nombre + estado, sin lo previsto · grip = se puede reordenar
     const ex = DB.ex(it.exerciseId), st = withStatus ? DB.status(it) : null;
-    return `<div class="item" style="--c:${DB.color(it.exerciseId)}" data-rid="${it.id}" ${attrs}>${grip ? '<span class="grip" data-act="grip" title="Arrastra para cambiar el orden" aria-label="Reordenar">⠿</span>' : ''}
-      <div class="grow"><div class="name">${U.esc(DB.exName(it.exerciseId))}</div>${withStatus ? '' : `<div class="meta">${U.esc(DB.planText(ex, it.plan))}</div>`}</div>${this.status(st)}</div>`;
+    return `<div class="item" style="--c:${DB.color(it.exerciseId)}" data-rid="${it.id}" ${attrs}>${grip ? `<span class="grip" data-act="grip" title="Arrastra para cambiar el orden" aria-label="Reordenar">${I('grip')}</span>` : ''}
+      <div class="grow"><div class="name">${U.esc(DB.exName(it.exerciseId))}</div><div class="meta">${U.esc(withStatus ? this.planShort(ex, it.plan) : DB.planText(ex, it.plan))}</div></div>${this.status(st)}</div>`;
+  },
+  // resumen corto: "3 series · 80 kg" / "20 min"
+  planShort(ex, plan) {
+    if (!plan?.length) return '';
+    if (DB.isCardio(ex)) return U.dur(plan.reduce((a, x) => a + (x.m || 0), 0));
+    const w = Math.max(0, ...plan.map(x => x.w || 0)), n = plan.length;
+    return `${n} ${n === 1 ? 'serie' : 'series'}${w && !DB.isBW(ex) ? ' · ' + DB.load(ex, w) : ''}`;
   }
 };
 
@@ -1116,18 +1288,19 @@ Views.rutina = {
     const hasTpl = Store.data.templates.length > 0, open = !isPast(U.addDays(mon, 6));   // ¿queda algún día editable?
     const futureEmpty = [0, 1, 2, 3, 4, 5, 6].every(i => { const d = U.addDays(mon, i); return isPast(d) || !DB.day(d).length; });
     let h = `<div class="row between wrap"><h2>Rutina</h2><div class="row">
-      <button class="btn sm ghost" data-act="week-shift" data-n="-1" aria-label="Semana anterior">‹</button>
+      <button class="btn sm ghost" data-act="week-shift" data-n="-1" aria-label="Semana anterior">${I('left')}</button>
       <span class="small bold">${U.fmt(mon)} – ${U.fmt(U.addDays(mon, 6))}</span>
-      <button class="btn sm ghost" data-act="week-shift" data-n="1" aria-label="Semana siguiente">›</button></div></div>
-      <div class="row wrap" style="margin:-4px 0 12px">
+      <button class="btn sm ghost" data-act="week-shift" data-n="1" aria-label="Semana siguiente">${I('right')}</button></div></div>
+      <div class="row week-actions">
         ${ui.weekOff ? '<button class="btn sm ghost" data-act="week-now">Volver a esta semana</button>' : ''}
         ${hasTpl && open ? '<button class="btn sm soft" data-act="tpl-apply">Aplicar rutina</button>' : ''}
         ${open && futureEmpty && prevHas ? '<button class="btn sm" data-act="week-copy">Copiar semana anterior</button>' : ''}
         ${!weekEmpty ? '<button class="btn sm ghost" data-act="week-save">Guardar como rutina</button>' : ''}
         ${open && !futureEmpty ? '<button class="btn sm ghost danger" data-act="week-reset">Restablecer semana</button>' : ''}</div>`;
     if (!Store.data.exercises.length) h += `<div class="card empty">Primero crea tus ejercicios en la pestaña <b>Ejercicios</b> y luego añádelos a cada día.</div>`;
-    h += '<div class="week" id="week">';
     const states = Gym.week(mon);
+    h += `<div class="daystrip">${states.map((x, i) => `<button class="${x.s} ${x.d === today ? 'is-today' : ''} ${DB.day(x.d).length ? 'has' : ''}" data-act="day-jump" data-date="${x.d}"><span>${DAYS_S[i].slice(0, 1)}</span><b>${U.parse(x.d).getDate()}</b><i></i></button>`).join('')}</div>`;
+    h += '<div class="week" id="week">';
     const TAGS = { rest: '<span class="dstate rst">Descanso</span>', miss: '<span class="dstate miss">Falta</span>', excused: '<span class="dstate excused">Justificada</span>' };
     for (let i = 0; i < 7; i++) {
       const date = U.addDays(mon, i), items = DB.day(date), st = states[i].s;
@@ -1138,7 +1311,7 @@ Views.rutina = {
         ${st === 'excused' ? `<button class="btn sm ghost excuse" data-act="excuse" data-date="${date}">Quitar justificación</button>` : ''}
         ${items.length ? UI.dayItems(items, it => `data-act="item-open" data-date="${date}" data-id="${it.id}"`, true, canSort) : (st === 'rest' ? '' : '<div class="rest">Nada previsto</div>')}
         ${isPast(date) ? '' : `<button class="btn add" data-act="day-add" data-date="${date}">+ Añadir ejercicio</button>`}
-        ${note ? `<button class="note-chip" data-act="note-open" data-date="${date}" title="Nota del día"><b>📝 Nota${note.r ? ` · <span class="nstars">${'★'.repeat(note.r)}</span>` : ''}</b>${note.t ? `<span>${U.esc(note.t)}</span>` : ''}</button>`
+        ${note ? `<button class="note-chip" data-act="note-open" data-date="${date}" title="Nota del día"><b>${I('note')}Nota${note.r ? ` · <span class="nstars">${'★'.repeat(note.r)}</span>` : ''}</b>${note.t ? `<span>${U.esc(note.t)}</span>` : ''}</button>`
                : `<button class="btn add note-add" data-act="note-open" data-date="${date}">+ Añadir nota</button>`}</div>`;
     }
     return h + '</div>';
@@ -1202,13 +1375,13 @@ Views.progreso = {
     const tot = Gym.totals(), wDays = Gym.week(mon), wk = Gym.count(wDays), n = Gym.current(), faltas = Gym.recent();
     const all = Perf.scoreTotal(), sc = Perf.score(mon, sun), stot = all.g + all.r;
     const cAll = Perf.cardioTotal(), cWeek = Perf.cardio(mon, sun), rs = Store.data.account.resets || {};
-    const resetRow = (k, r) => `<div class="row between reset-row"><span class="muted small">${r ? 'Desde el ' + U.fmtY(r.d) : ''}</span><button class="btn sm ghost" data-act="stats-reset" data-k="${k}">↺ Restablecer</button></div>`;
+    const resetRow = (k, r) => `<div class="row between reset-row"><span class="muted small">${r ? 'Desde el ' + U.fmtY(r.d) : ''}</span><button class="btn sm ghost" data-act="stats-reset" data-k="${k}">${I('reset')}Restablecer</button></div>`;
     const favs = Store.data.exercises.filter(e => e.pinned);
     const plural = (k, a, b) => `${k} ${k === 1 ? a : b}`;
     const SYM = { gym: '✓', rest: '–', miss: '✕', excused: 'J', today: '•' };
     return `<h2>Progreso</h2>
       <div class="card"><div class="clickable" data-act="cal-open" title="Ver calendario">
-        <div class="row between"><h3 style="margin:0">Días en el gym <span class="muted" style="font-weight:600">›</span></h3><span class="tag" style="--c:var(--ok)">${wk.gym}/${wk.total} esta semana</span></div>
+        <div class="row between"><h3 class="row" style="margin:0;gap:4px">Días en el gym <span class="muted">${I('right')}</span></h3><span class="tag" style="--c:var(--ok)">${wk.gym}/${wk.total} esta semana</span></div>
         <div class="big mt2">${tot.gym}<small> / ${tot.total}</small></div>
         <div class="meter"><i style="width:${tot.total ? tot.gym / tot.total * 100 : 0}%"></i></div>
         <div class="weekdots">${wDays.map((x, i) => `<span class="${x.s}"><b>${SYM[x.s] || ''}</b>${DAYS_S[i]}</span>`).join('')}</div></div>
@@ -1236,7 +1409,7 @@ Views.progreso = {
              <div class="stat"><b>${r ? r.mostReps + ' reps' : '–'}</b><span>Mejor sesión (total)</span>${r ? `<i>${U.fmtY(r.mostRepsDate)}</i>` : ''}</div>`
           : `<div class="stat"><b>${r ? DB.load(e, r.maxW) : '–'}</b><span>Peso máximo</span>${r ? `<i>${U.fmtY(r.maxWDate)}</i>` : ''}</div>
              <div class="stat"><b>${r ? DB.load(e, r.top.w || 0) + ' × ' + DB.reps(r.top) : '–'}</b><span>Mejor serie</span>${r ? `<i>${U.fmtY(r.bestDate)}</i>` : ''}</div>`}</div></div>`; }).join('')
-        : '<div class="card empty">Marca ejercicios con 🤍 en <b>Ejercicios</b> para ver aquí sus récords.</div>'}`;
+        : `<div class="card empty">Marca ejercicios con ${I('heart')} en <b>Ejercicios</b> para ver aquí sus récords.</div>`}`;
   },
   mount(el) {
     const p = this._p, lab = p.weeks.map(U.short);
@@ -1263,12 +1436,12 @@ Views.ajustes = {
         <div class="mt">${tpls.length ? tpls.map(tp => {
           const n = tp.days.reduce((s, d) => s + d.length, 0), dd = tp.days.map((d, i) => d.length ? DAYS_S[i] : null).filter(Boolean);
           return `<div class="list-item"><div class="grow clickable" data-act="tpl-edit" data-id="${tp.id}"><div class="bold">${U.esc(tp.name)}</div><div class="muted small">${n} ejercicios${dd.length ? ' · ' + dd.join(', ') : ''}</div></div>
-            <button class="icon-btn" data-act="tpl-edit" data-id="${tp.id}" aria-label="Editar">✎</button><button class="icon-btn" data-act="tpl-del" data-id="${tp.id}" aria-label="Eliminar">🗑</button></div>`;
+            <button class="icon-btn" data-act="tpl-edit" data-id="${tp.id}" aria-label="Editar">${I('edit')}</button><button class="icon-btn" data-act="tpl-del" data-id="${tp.id}" aria-label="Eliminar">${I('trash')}</button></div>`;
         }).join('') : '<div class="empty">Crea rutinas tipo y luego aplícalas a cualquier semana desde <b>Rutina</b>.</div>'}</div></div>
       <div class="card"><h3>Aspecto del sistema</h3>
         <h4 style="margin:0 0 10px;font-size:14px;font-weight:700">Tema</h4><div class="seg">
         ${[['auto', 'Auto'], ['light', 'Claro'], ['dark', 'Oscuro']].map(([v, l]) => `<button class="${t === v ? 'on' : ''}" data-act="theme" data-v="${v}">${l}</button>`).join('')}</div>
-        <div class="subsec"><h4>Color</h4><div class="swatches">${ACCENTS.map(a => `<button class="swatch ${a.id === acc ? 'on' : ''}" style="background:linear-gradient(135deg,${a.l[1]},${a.l[0]})" data-act="accent" data-v="${a.id}" title="${a.name}" aria-label="${a.name}">${a.id === acc ? '✓' : ''}</button>`).join('')}</div>
+        <div class="subsec"><h4>Color</h4><div class="swatches">${ACCENTS.map(a => `<button class="swatch ${a.id === acc ? 'on' : ''}" style="background:linear-gradient(135deg,${a.l[1]},${a.l[0]})" data-act="accent" data-v="${a.id}" title="${a.name}" aria-label="${a.name}">${a.id === acc ? I('check') : ''}</button>`).join('')}</div>
 </div>
         <div class="subsec"><div class="row between"><h4 style="margin:0">Tamaño de pantalla</h4><div class="scale-row">
         <button class="btn sm" data-act="scale" data-n="-1" ${sc <= SCALES[0] ? 'disabled' : ''} aria-label="Más pequeño">A−</button><b>${Math.round(sc * 100)} %</b>
@@ -1296,7 +1469,7 @@ const Picker = {
     const items = UI.filterEx(ui.pick.g, ui.pick.q);
     $('#pick-list', box).innerHTML = items.length ? items.map(e => `<div class="list-item clickable" data-act="pick" data-id="${U.esc(e.id)}">
       <span class="dot" style="background:${DB.group(e.group).color}"></span>
-      <div class="grow"><div class="bold">${e.pinned ? '❤️ ' : ''}${U.esc(e.name)}</div><div class="muted small">${U.esc(e.muscle)}${!DB.isCardio(e) && e.load !== 'kg' ? ' · ' + LOADS[e.load].name : ''}${e.rating ? ' · ' + '★'.repeat(e.rating) : ''}</div></div>
+      <div class="grow"><div class="bold">${e.pinned ? I('heart', 'filled sm') : ''}${U.esc(e.name)}</div><div class="muted small">${U.esc(e.muscle)}${!DB.isCardio(e) && e.load !== 'kg' ? ' · ' + LOADS[e.load].name : ''}${e.rating ? ' · ' + '★'.repeat(e.rating) : ''}</div></div>
       <span style="color:var(--accent);font-size:22px;font-weight:800">+</span></div>`).join('')
       : `<div class="empty">${Store.data.exercises.length ? 'Sin resultados' : 'Aún no tienes ejercicios: créalo aquí abajo'}</div>`;
   }
@@ -1336,7 +1509,7 @@ const ItemSheet = {
         ${UI.setsTable(ex, it.log, 'log', it.plan, ro)}</div>`;
     }
     h += ro ? '<div class="hint" style="text-align:center">Este día ya ha pasado: puedes verlo, pero no modificarlo.</div>'
-      : `${cardio ? '' : '<button class="btn block" data-act="ss-make" style="margin-bottom:8px">⇄ Hacer biserie con otro ejercicio</button>'}
+      : `${cardio ? '' : `<button class="btn block" data-act="ss-make" style="margin-bottom:8px">${I('link')}Hacer biserie con otro ejercicio</button>`}
          <button class="btn ghost danger block" data-act="item-del">${isTpl ? 'Quitar de la rutina' : 'Quitar del día'}</button>`;
     box.innerHTML = h;
   },
@@ -1344,8 +1517,8 @@ const ItemSheet = {
   drawSS(box, group) {
     const r = ui.item, isTpl = r.kind === 'tpl', ro = this.ro(), L = 'ABC', n = group.length, name = DB.ssName(n);
     const sub = (isTpl ? `${U.esc(DB.tpl(r.tid).name)} · ${DAYS[r.d]}` : U.fmtLong(r.date)) + (ro ? ' · solo lectura' : '');
-    const who = (it, j) => { const ex = DB.ex(it.exerciseId); return `<div class="ss-who" data-rid="${it.id}">${ro ? '' : '<span class="grip" data-act="grip" title="Arrastra para cambiar el orden" aria-label="Reordenar">⠿</span>'}<i class="ssk ${L[j].toLowerCase()}">${L[j]}</i><span class="dot" style="background:${DB.color(it.exerciseId)}"></span><b>${U.esc(DB.exName(it.exerciseId))}</b><span class="muted small">${LOADS[ex?.load || 'kg'].name}</span>${isTpl ? '' : UI.status(DB.status(it))}${ro ? '' : `<button class="icon-btn" data-act="ss-out" data-id="${it.id}" title="Sacar de la ${name.toLowerCase()}" aria-label="Sacar">✕</button>`}</div>`; };
-    let h = `${UI.head('⇄ ' + name, sub)}
+    const who = (it, j) => { const ex = DB.ex(it.exerciseId); return `<div class="ss-who" data-rid="${it.id}">${ro ? '' : `<span class="grip" data-act="grip" title="Arrastra para cambiar el orden" aria-label="Reordenar">${I('grip')}</span>`}<i class="ssk ${L[j].toLowerCase()}">${L[j]}</i><span class="dot" style="background:${DB.color(it.exerciseId)}"></span><b>${U.esc(DB.exName(it.exerciseId))}</b><span class="muted small">${LOADS[ex?.load || 'kg'].name}</span>${isTpl ? '' : UI.status(DB.status(it))}${ro ? '' : `<button class="icon-btn" data-act="ss-out" data-id="${it.id}" title="Sacar de la ${name.toLowerCase()}" aria-label="Sacar">${I('x')}</button>`}</div>`; };
+    let h = `${UI.head(name, sub)}
       <div class="card ss-whos" data-sort-ss="1" style="padding:8px 12px">${group.map(who).join('')}</div>
       <div class="card sec-plan"><div class="sec-title"><h3>Previsto</h3></div>${UI.ssTable(group, 'plan', ro)}</div>`;
     if (!isTpl) {
@@ -1356,7 +1529,7 @@ const ItemSheet = {
     }
     const todos = n === 3 ? 'los tres' : 'los dos';
     h += ro ? '<div class="hint" style="text-align:center">Este día ya ha pasado: puedes verlo, pero no modificarlo.</div>'
-      : `${n < DB.SS_MAX ? '<button class="btn block" data-act="ss-make" style="margin-bottom:8px">⇄ Añadir otro ejercicio (triserie)</button>' : ''}
+      : `${n < DB.SS_MAX ? `<button class="btn block" data-act="ss-make" style="margin-bottom:8px">${I('link')}Añadir otro ejercicio (triserie)</button>` : ''}
          <div class="row"><button class="btn grow" data-act="ss-split">Separar ${name.toLowerCase()}</button><button class="btn ghost danger grow" data-act="ss-del">${isTpl ? 'Quitar ' + todos : 'Quitar ' + todos + ' del día'}</button></div>`;
     box.innerHTML = h;
   }
@@ -1481,6 +1654,10 @@ const H = {
 
   // Rutina
   'week-shift': el => { ui.weekOff += +el.dataset.n; ui.stripX = null; App.render(); },
+  'day-jump': el => {
+    const strip = $('#week'), col = strip?.querySelector(`[data-sort-date="${el.dataset.date}"]`); if (!col) return;
+    strip.scrollTo({ left: col.offsetLeft - strip.offsetLeft - 16, behavior: 'smooth' });
+  },
   'week-now': () => { ui.weekOff = 0; ui.stripX = null; App.render(); },
   'week-copy': () => {
     const mon = weekMon();
@@ -1572,7 +1749,7 @@ const H = {
     UI.open(`${UI.head(g.length ? 'Hacer triserie con…' : 'Hacer biserie con…', g.map(x => U.esc(DB.exName(x.exerciseId))).join(' + ') || U.esc(DB.exName(it.exerciseId)))}
       ${cands.map(c => `<div class="list-item clickable" data-act="ss-pick" data-id="${c.id}"><span class="dot" style="background:${DB.color(c.exerciseId)}"></span>
         <div class="grow bold">${U.esc(DB.exName(c.exerciseId))}</div><span style="color:var(--accent);font-weight:800">Unir</span></div>`).join('')}
-      <div class="hint">El ejercicio elegido se colocará justo después de ${U.esc(DB.exName(last.exerciseId))}. Luego puedes cambiar el orden arrastrando ⠿.</div>`);
+      <div class="hint">El ejercicio elegido se colocará justo después de ${U.esc(DB.exName(last.exerciseId))}. Luego puedes cambiar el orden arrastrando el asa.</div>`);
   },
   'ss-pick': el => {
     const list = ItemSheet.list(), it = curItem(), other = list.find(x => x.id === el.dataset.id); if (!it || !other) return;
@@ -1660,7 +1837,7 @@ const H = {
   },
   fav: el => {
     const e = DB.ex(el.dataset.id); e.pinned = !e.pinned; Store.save();
-    UI.toast(e.pinned ? '❤️ Añadido a favoritos' : 'Quitado de favoritos');
+    UI.toast(e.pinned ? 'Añadido a favoritos' : 'Quitado de favoritos');
     if ($('#exd')) ExerciseDetail.draw(); else App.render();
   },
   'ex-notes': el => { DB.ex(ui.detailId).notes = el.value; Store.save(); },
@@ -1931,9 +2108,9 @@ const Cal = {
     }
     const thisMonth = first === today.slice(0, 8) + '01';
     box.innerHTML = `${UI.head('Días en el gym')}
-      <div class="cal-head"><button class="btn sm ghost" data-act="cal-shift" data-n="-1" aria-label="Mes anterior">‹</button>
+      <div class="cal-head"><button class="btn sm ghost" data-act="cal-shift" data-n="-1" aria-label="Mes anterior">${I('left')}</button>
         <b>${MONTHS[month]} ${d0.getFullYear()}</b>
-        <button class="btn sm ghost" data-act="cal-shift" data-n="1" aria-label="Mes siguiente">›</button></div>
+        <button class="btn sm ghost" data-act="cal-shift" data-n="1" aria-label="Mes siguiente">${I('right')}</button></div>
       <div class="cal-grid">${cells}</div>
       ${thisMonth ? '' : '<button class="btn block mt2" data-act="cal-today">Volver a este mes</button>'}
       <div class="hint" style="text-align:center">Toca un día para verlo en Rutina.</div>`;
@@ -2082,7 +2259,7 @@ const Updater = {
   show(v) {
     if ($('#update-bar')) return;
     const b = document.createElement('div'); b.id = 'update-bar'; b.className = 'update-bar';
-    b.innerHTML = `<span>Hay una versión nueva <b>v${U.esc(v)}</b></span><button class="btn sm primary" data-act="app-update">Actualizar</button><button class="icon-btn" data-act="update-later" aria-label="Más tarde">✕</button>`;
+    b.innerHTML = `<span>Hay una versión nueva <b>v${U.esc(v)}</b></span><button class="btn sm primary" data-act="app-update">Actualizar</button><button class="icon-btn" data-act="update-later" aria-label="Más tarde">${I('x')}</button>`;
     document.body.appendChild(b);
   },
   async apply() {

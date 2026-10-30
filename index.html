@@ -17,7 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* =========================================================
-   GymTrack · v5.6.0 · por adr12ce
+   GymTrack · v5.7.0 · por adr12ce
    1. Estilos  2. Script: Config · Utils · Store/Migraciones · Consultas
    · Nube (Supabase) · Contador de días · UI · Gráficas · Vistas · Modales · Acceso · Acciones · App
    ========================================================= */
@@ -262,6 +262,30 @@ body.auth{padding-bottom:24px}
 .crop-box .mask{position:absolute;inset:0;border-radius:50%;box-shadow:0 0 0 999px rgba(0,0,0,.5);pointer-events:none;outline:2px solid rgba(255,255,255,.8);outline-offset:-2px}
 .crop-zoom{display:flex;align-items:center;gap:10px;margin-top:14px}
 .crop-zoom input{flex:1;padding:0;accent-color:var(--accent)}
+/* biseries */
+.ss-group{display:flex;align-items:stretch;gap:2px;margin-top:7px;padding:6px 6px 6px 4px;border-radius:14px;border:1.5px dashed color-mix(in srgb,var(--accent) 55%,transparent);background:color-mix(in srgb,var(--accent) 5%,transparent)}
+.ss-group > .grip{margin:0;width:20px}
+.ss-body{flex:1;min-width:0}
+.ss-group .item{margin-top:5px}
+.ss-label{font-size:11px;font-weight:800;color:var(--accent-text);text-transform:uppercase;letter-spacing:.05em;padding:0 2px}
+.ss-group.lifted{position:relative;z-index:3;box-shadow:0 10px 28px rgba(0,0,0,.22);transform:scale(1.03);background:var(--card)}
+.ssk{font-style:normal;display:inline-grid;place-items:center;min-width:18px;height:18px;border-radius:5px;font-size:11px;font-weight:800;color:#fff;margin-left:3px;vertical-align:1px}
+.ssk.a{background:var(--accent)}.ssk.b{background:#6366f1}
+.ss-who{display:flex;align-items:center;gap:8px;padding:4px 0}
+.ss-who .ssk{margin:0}
+.ss-who b{flex:1;min-width:0}
+.sets.ss tr.ss-odd td{background:color-mix(in srgb,var(--card-2) 55%,transparent)}
+.sets.ss tr.ss-a.ss-odd td:first-child,.sets.ss tr.ss-b.ss-odd td:first-child{border-radius:8px 0 0 8px}
+.sets td.na{text-align:center;color:var(--muted)}
+/* nota del día */
+.note-add{margin-top:6px}
+.note-chip{display:block;width:100%;text-align:left;margin-top:8px;border:none;border-radius:12px;padding:8px 10px;background:var(--accent-soft);color:var(--text);font:inherit;font-size:12.5px;cursor:pointer;line-height:1.35}
+.note-chip b{display:block;font-size:12px;color:var(--accent-text)}
+.note-chip span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:var(--muted)}
+.note-chip .nstars{display:inline;color:var(--star)}
+.note-stars .star{font-size:32px;padding:2px 4px}
+.update-bar{position:fixed;top:calc(8px + env(safe-area-inset-top));left:12px;right:12px;margin:0 auto;width:fit-content;z-index:40;display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--accent);box-shadow:0 10px 30px rgba(0,0,0,.18);border-radius:14px;padding:8px 8px 8px 14px;font-size:14px;max-width:calc(100vw - 24px);animation:up .2s ease-out}
+.update-bar span{white-space:nowrap}
 .users-count{text-align:center;font-size:12.5px;color:var(--muted);margin-top:4px}
 </style>
 </head>
@@ -279,9 +303,11 @@ body.auth{padding-bottom:24px}
 <script>
 'use strict';
 /* ===================== 1. CONFIG ===================== */
-const APP_VERSION = '5.6.0';
-const SCHEMA_VERSION = 7;          // súbelo cuando cambie la estructura de datos y añade su migración
-const STORAGE_KEY = 'gymtrack.data';   // caché local (una por usuario) y datos antiguos sin cuenta
+const APP_VERSION = '5.7.0';
+const SCHEMA_VERSION = 8;          // súbelo cuando cambie la estructura de datos y añade su migración
+const STORAGE_KEY = 'gymtrack.data';
+const PENDING_KEY = 'gymtrack.pending.';   // + id de usuario: hay cambios guardados en el dispositivo sin subir a la nube
+const PROFILE_KEY = 'gymtrack.profile.';   // + id de usuario: copia del perfil para abrir sin conexión   // caché local (una por usuario) y datos antiguos sin cuenta
 /* ---- Servidor (Supabase): Project Settings → API ----
    La clave "anon public" puede ir en la web: la seguridad la ponen las reglas RLS de supabase.sql */
 const SUPABASE_URL = 'https://nopkvdccoavekyyfgiaz.supabase.co';        // ej. 'https://abcdefgh.supabase.co'
@@ -302,6 +328,7 @@ const GROUPS = [
   { id: 'triceps', name: 'Tríceps', color: '#9333ea', muscles: ['General','Cabeza larga','Cabeza lateral','Cabeza medial'] },
   { id: 'brazo',   name: 'Bíceps',  color: '#d97706', muscles: ['General','Bíceps','Braquial','Antebrazo'] },
   { id: 'piernas', name: 'Piernas', color: '#16a34a', muscles: ['General','Cuádriceps','Isquiotibiales','Glúteos','Gemelos','Aductores','Abductores'] },
+  { id: 'abdominales', name: 'Abdominales', color: '#a0522d', muscles: ['General','Abdominal superior','Abdominal inferior','Oblicuos','Transverso'] },
   { id: 'cardio',  name: 'Cardio',  color: '#0891b2', muscles: ['Cinta','Bicicleta','Elíptica','Remo','Escaladora','Comba','Otro'], cardio: true }
 ];
 // Tipos de carga de un ejercicio de fuerza
@@ -333,6 +360,7 @@ const WEEKS_SHOWN = 12;
 
 /* ===================== 2. UTILS ===================== */
 const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const U = {
   uid: () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
   slug: s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
@@ -374,8 +402,10 @@ function defaultData() {
     settings: { theme: 'auto' },
     excused: {},    // faltas justificadas: { 'AAAA-MM-DD': true }
     exercises: [],  // { id, name, group, muscle, load:'kg'|'side'|'plates'|'cardio', rating, pinned(=favorito), notes }
-    days: {},       // 'AAAA-MM-DD': [ { id, exerciseId, plan:[fila], log:[fila] } ]   fila = {w,r,f} o, en cardio, {m,i}
-    templates: []   // rutinas prefabricadas: { id, name, days:[ [ {id, exerciseId, plan} ] × 7 ] }
+    days: {},       // 'AAAA-MM-DD': [ { id, exerciseId, plan:[fila], log:[fila], ss? } ]   fila = {w,r,f,ds} o, en cardio, {m,i} · ss = id de biserie (2 ejercicios seguidos)
+    templates: [],  // rutinas prefabricadas: { id, name, days:[ [ {id, exerciseId, plan, ss?} ] × 7 ] }
+    notes: {},      // nota de cada día: { 'AAAA-MM-DD': { r: valoración 1-5 o null, t: observaciones } }
+    meta: {}        // marca de tiempo de cada parte (para fusionar cambios de varios dispositivos), ver Sync
   };
 }
 const Migrations = {
@@ -411,6 +441,8 @@ const Migrations = {
   5: d => { d.account ||= { createdAt: U.today() }; d.account.goals ||= [{ from: U.monday(d.account.createdAt), n: DEFAULT_GOAL }]; d.excused ||= {}; d.version = 6; return d; },
   // v6 → v7: los ejercicios de "Hombro" (antes dentro de Bíceps) pasan al grupo nuevo Hombros
   6: d => { for (const e of d.exercises || []) if (e.group === 'brazo' && e.muscle === 'Hombro') { e.group = 'hombros'; e.muscle = 'General'; } d.version = 7; return d; },
+  // v7 → v8: notas del día, biseries y marcas de tiempo para la sincronización
+  7: d => { d.notes ||= {}; d.meta ||= {}; d.version = 8; return d; },
   run(d) {
     let v = d.version || 1;
     while (v < SCHEMA_VERSION) { if (this[v]) d = this[v](d); v++; }
@@ -421,13 +453,66 @@ const Migrations = {
     return d;
   }
 };
+/* ===================== SINCRONIZACIÓN POR PARTES =====================
+   Los datos se dividen en partes: ajustes, cuenta, cada ejercicio, cada día, cada rutina prefabricada,
+   cada falta justificada y cada nota. Cada vez que cambia una parte se apunta la hora en data.meta
+   (también cuando se borra). Al juntar dos versiones (este dispositivo y la nube) gana, parte a parte,
+   la modificada más tarde: así editar en dos dispositivos a la vez ya no hace perder cambios.          */
+const Sync = {
+  snap: {},   // cómo estaba cada parte la última vez que se guardó (para saber qué ha cambiado)
+  parts(d) {
+    const p = { settings: d.settings, account: d.account };
+    for (const e of d.exercises || []) p['ex:' + e.id] = e;
+    for (const [k, v] of Object.entries(d.days || {})) p['day:' + k] = v;
+    for (const t of d.templates || []) p['tpl:' + t.id] = t;
+    for (const k of Object.keys(d.excused || {})) p['exc:' + k] = true;
+    for (const [k, v] of Object.entries(d.notes || {})) p['note:' + k] = v;
+    return p;
+  },
+  build(p, meta, base) {
+    const d = { version: SCHEMA_VERSION, settings: p.settings || base.settings, account: p.account || base.account, exercises: [], days: {}, templates: [], excused: {}, notes: {}, meta };
+    for (const [k, v] of Object.entries(p)) {
+      const i = k.indexOf(':'); if (i < 0) continue;
+      const type = k.slice(0, i), id = k.slice(i + 1);
+      if (type === 'ex') d.exercises.push(v); else if (type === 'day') d.days[id] = v; else if (type === 'tpl') d.templates.push(v);
+      else if (type === 'exc') d.excused[id] = true; else if (type === 'note') d.notes[id] = v;
+    }
+    d.templates.sort((a, b) => a.id.localeCompare(b.id));   // los ids empiezan por la fecha de creación: mantiene el orden
+    return d;
+  },
+  reset(d) { const p = this.parts(d); this.snap = {}; for (const k in p) this.snap[k] = JSON.stringify(p[k]); },
+  // apunta la hora en las partes que han cambiado (o se han borrado) desde el último guardado
+  stamp(d) {
+    const p = this.parts(d), now = Date.now(), snap = {}; d.meta ||= {};
+    for (const k in p) { const v = JSON.stringify(p[k]); snap[k] = v; if (this.snap[k] !== v) d.meta[k] = now; }
+    for (const k in this.snap) if (!(k in p)) d.meta[k] = now;
+    this.snap = snap;
+  },
+  // junta la versión local (L) con la de la nube (R). changed = la nube aporta algo distinto a lo local
+  merge(L, R) {
+    const pl = this.parts(L), pr = this.parts(R), ml = L.meta || {}, mr = R.meta || {}, out = {}, meta = {};
+    let changed = false;
+    for (const k of new Set([...Object.keys(pl), ...Object.keys(pr), ...Object.keys(ml), ...Object.keys(mr)])) {
+      const tl = ml[k] || 0, tr = mr[k] || 0, useL = tl >= tr, win = useL ? pl : pr, lose = useL ? pr : pl, tw = useL ? tl : tr;
+      let v;
+      if (k in win) v = win[k]; else if (!tw && k in lose) v = lose[k];   // sin marca de tiempo (datos antiguos): se conserva
+      if (v !== undefined) out[k] = v;
+      if (tl || tr) meta[k] = Math.max(tl, tr);
+      if ((k in pl ? JSON.stringify(pl[k]) : undefined) !== (v === undefined ? undefined : JSON.stringify(v))) changed = true;
+    }
+    return { data: this.build(out, meta, L), changed };
+  }
+};
+
 /* Datos del usuario con sesión iniciada: copia local (para ir rápido y sin conexión) + nube */
 const Store = {
   data: null, key: STORAGE_KEY,
   use(uid) { this.key = STORAGE_KEY + '.' + uid; },
   cached() { try { const raw = localStorage.getItem(this.key); return raw ? JSON.parse(raw) : null; } catch { return null; } },
+  set(d) { this.data = d; Sync.reset(d); },
   save(sync = true) {
     if (!this.data) return;
+    if (sync) Sync.stamp(this.data);
     try { localStorage.setItem(this.key, JSON.stringify(this.data)); } catch (e) { UI.toast('⚠️ No se pudo guardar en este navegador'); }
     if (sync) Cloud.queue();
   }
@@ -435,8 +520,10 @@ const Store = {
 
 /* ===================== NUBE (Supabase) =====================
    Cada usuario tiene un documento con todos sus datos en la tabla user_data.
-   Los cambios se suben agrupados (0,7 s); sin conexión se reintenta y al volver a la app se traen
-   los cambios hechos desde otro dispositivo. Si dos dispositivos editan a la vez, gana el último.   */
+   Los cambios se suben agrupados (0,7 s). Antes de subir se lee la versión de la nube y, si otro
+   dispositivo guardó algo, se fusiona (ver Sync). La escritura es condicional: solo se guarda si nadie
+   ha escrito entre medias; si no, se vuelve a leer y fusionar. Sin conexión, los cambios quedan
+   marcados como pendientes en el dispositivo (sobreviven a cerrar la app) y se suben al volver.      */
 const Cloud = {
   sb: null, user: null, profile: null, timer: null, dirty: false, saving: false, lastRemote: null, status: 'saved',
   configured() { return !!(SUPABASE_URL && SUPABASE_ANON_KEY); },
@@ -448,23 +535,45 @@ const Cloud = {
     this.status = s; const el = $('#sync');
     if (el) { el.className = 'sync ' + s; el.title = { saved: 'Guardado en la nube', saving: 'Guardando…', offline: 'Sin conexión: se guardará al volver' }[s]; }
   },
-  queue() { if (!this.user) return; this.dirty = true; this.setStatus('saving'); clearTimeout(this.timer); this.timer = setTimeout(() => this.flush(), 700); },
+  pending(on) {   // marca persistente de "hay cambios sin subir" (sobrevive a cerrar la app)
+    if (!this.user) return false;
+    const k = PENDING_KEY + this.user.id;
+    try { if (on === true) localStorage.setItem(k, '1'); else if (on === false) localStorage.removeItem(k); else return localStorage.getItem(k) === '1'; } catch { return false; }
+  },
+  queue() { if (!this.user) return; this.dirty = true; this.pending(true); this.setStatus('saving'); clearTimeout(this.timer); this.timer = setTimeout(() => this.flush(), 700); },
+  // incorpora una versión de la nube a lo local (fusionando) y refresca la pantalla si cambia algo
+  absorb(r) {
+    const { data, changed } = Sync.merge(Store.data, Migrations.run(r.data));
+    Store.set(data); this.lastRemote = r.updated_at; Store.save(false);
+    if (changed) { App.applyTheme(); if (UI.stack.length) redrawModals(); else App.render(); }
+  },
   async flush() {
     if (!this.user || !this.dirty || this.saving) return;
     this.saving = true; this.dirty = false; clearTimeout(this.timer);
     const uid = this.user.id;
-    let res;
-    try { res = await this.sb.from('user_data').upsert({ user_id: uid, data: Store.data, updated_at: new Date().toISOString() }).select('updated_at').single(); }
-    catch (e) { res = { error: e }; }
-    this.saving = false;
+    let ok = false, err = null;
+    try {
+      for (let i = 0; i < 4 && !ok; i++) {
+        const { data: r, error } = await this.sb.from('user_data').select('data, updated_at').eq('user_id', uid).maybeSingle();
+        if (error) throw error;
+        if (!this.user || this.user.id !== uid) return;
+        if (r && r.updated_at !== this.lastRemote) this.absorb(r);   // otro dispositivo guardó algo: se fusiona antes de subir
+        const payload = { data: Store.data, updated_at: new Date().toISOString() };
+        const q = r ? this.sb.from('user_data').update(payload).eq('user_id', uid).eq('updated_at', r.updated_at)   // solo si nadie escribió entre medias
+                    : this.sb.from('user_data').insert({ user_id: uid, ...payload });
+        const { data: rows, error: e2 } = await q.select('updated_at');
+        if (e2) { if (!r && /duplicate|23505/.test((e2.message || '') + (e2.code || ''))) continue; throw e2; }
+        if (rows && rows.length) { this.lastRemote = rows[0].updated_at; ok = true; }
+      }
+      if (!ok) throw new Error('conflict');
+    } catch (e) { err = e; } finally { this.saving = false; }
     if (!this.user || this.user.id !== uid) return;
-    if (res.error) {
+    if (err) {
       this.dirty = true; this.setStatus('offline'); clearTimeout(this.timer);
-      if (/data_size/.test(res.error.message || '')) { UI.toast('⚠️ Has llegado al límite de datos de tu cuenta'); return; }
+      if (/data_size/.test(err.message || '')) { UI.toast('⚠️ Has llegado al límite de datos de tu cuenta'); return; }
       this.timer = setTimeout(() => this.flush(), 5000); return;
     }
-    this.lastRemote = res.data.updated_at;
-    if (this.dirty) this.flush(); else this.setStatus('saved');
+    if (this.dirty) this.flush(); else { this.pending(false); this.setStatus('saved'); }
   },
   async fetchData() {
     const { data, error } = await this.sb.from('user_data').select('data, updated_at').eq('user_id', this.user.id).maybeSingle();
@@ -472,26 +581,29 @@ const Cloud = {
   },
   async fetchProfile() {
     const { data, error } = await this.sb.from('profiles').select('*').eq('id', this.user.id).maybeSingle();
-    if (error) throw error; return data;
+    if (error) throw error;
+    try { if (data) localStorage.setItem(PROFILE_KEY + this.user.id, JSON.stringify(data)); } catch {}
+    return data;
   },
+  cachedProfile() { try { return JSON.parse(localStorage.getItem(PROFILE_KEY + this.user.id)); } catch { return null; } },
   async updateProfile(fields) {
     const { error } = await this.sb.from('profiles').update(fields).eq('id', this.user.id);
     if (error) throw error;
     Object.assign(this.profile, fields);
+    try { localStorage.setItem(PROFILE_KEY + this.user.id, JSON.stringify(this.profile)); } catch {}
   },
   async userCount() {
     const { data, error } = await this.sb.rpc('user_count'); if (error) throw error; return data;
   },
-  // al volver a la app: si otro dispositivo guardó algo más nuevo, se carga
+  // al volver a la app (y cada minuto): se suben los pendientes y se traen los cambios de otros dispositivos
   async refresh() {
-    if (!this.user || this.dirty || this.saving || UI.stack.length) return;
+    if (!this.user || this.saving) return;
+    if (this.dirty) return this.flush();
     try {
       const r = await this.fetchData();
-      if (r && !this.dirty && (!this.lastRemote || new Date(r.updated_at) > new Date(this.lastRemote))) {
-        Store.data = Migrations.run(r.data); this.lastRemote = r.updated_at; Store.save(false); App.applyTheme(); App.render();
-      }
-      this.setStatus('saved');
-    } catch { /* sin conexión: seguimos con lo local */ }
+      if (r && r.updated_at !== this.lastRemote && !this.saving && !this.dirty) this.absorb(r);
+      if (!this.dirty) this.setStatus('saved');
+    } catch { this.setStatus(this.dirty ? 'offline' : this.status); }
   }
 };
 
@@ -611,6 +723,18 @@ const DB = {
     it.plan.forEach((p, i) => { s += c ? this.cmpCardio(p, it.log[i]) : this.cmpSet(noW(p), noW(it.log[i])); });
     s += it.log.slice(it.plan.length).filter(this.done).length;
     return s > 0 ? '+' : s < 0 ? '-' : '=';
+  },
+  // biserie: dos ejercicios seguidos con el mismo "ss"
+  partner(list, it) { return it?.ss ? (list || []).find(x => x.ss === it.ss && x.id !== it.id) || null : null; },
+  // deja solo biseries válidas: exactamente 2 ejercicios de fuerza seguidos
+  fixSS(list) {
+    if (!list) return;
+    for (let i = 0; i < list.length; i++) {
+      const it = list[i]; if (!it.ss) continue;
+      const nx = list[i + 1], ok = nx && nx.ss === it.ss && !(list[i + 2]?.ss === it.ss) && !this.isCardio(this.ex(it.exerciseId)) && !this.isCardio(this.ex(nx.exerciseId));
+      if (ok) { i++; continue; }
+      delete it.ss;
+    }
   },
   isGymDay(date) { return this.day(date).some(it => this.validSets(it.log).length); }
 };
@@ -771,25 +895,53 @@ const UI = {
     }
     return `<input type="text" inputmode="decimal" autocomplete="off" value="${val != null ? String(val).replace('.', ',') : ''}" placeholder="${ph != null ? String(ph).replace('.', ',') : '–'}" ${attrs}>`;
   },
+  // una fila de serie de fuerza. o = { x: id del ejercicio (en biseries), label, cls, count, loadCol }
+  setRow(ex, s, i, type, ph, ro, o = {}) {
+    const dis = ro ? ' disabled' : '', bw = DB.isBW(ex), plan = type === 'plan', x = o.x ? ` data-x="${o.x}"` : '';
+    const a = `data-in="row" data-t="${type}" data-s="${i}"${x}`, ds = s.ds && !bw;   // sin drop set en peso corporal
+    const rPh = s.f ? 'FALLO' : (ph ? (ph.r ?? (ph.f ? 'FALLO' : '–')) : '–');
+    const load = o.loadCol === false ? '' : bw ? '<td class="na">—</td>' : `<td>${this.loadField(ex, s.w, a + ' data-k="w"' + dis, ro ? '–' : ph?.w)}</td>`;
+    return `<tr class="${o.cls || ''}">
+      <td class="n">${o.label || i + 1}</td>${load}
+      <td class="r">${plan && s.f
+        ? `<input type="text" class="fallo" value="" placeholder="${ds ? 'FALLO+DS' : 'FALLO'}" readonly tabindex="-1" aria-label="Al fallo">`
+        : `<input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" class="${s.f ? 'fallo' : ''}" value="${s.r ?? ''}" placeholder="${ro && !s.f ? '–' : (s.f ? (ds ? 'FALLO+DS' : 'FALLO') : rPh)}" ${a} data-k="r"${dis}>${s.f && s.r != null ? `<span class="fallo-tag">${ds ? 'FALLO+DS' : 'FALLO'}</span>` : ''}`}</td>
+      <td class="f"><div class="fcell"><button class="ftog ${s.f ? 'on' : ''}" data-act="ftog" data-t="${type}" data-s="${i}"${x} title="Al fallo" aria-pressed="${s.f}"${dis}>F</button>${s.f && !bw ? `<button class="ftog ds ${s.ds ? 'on' : ''}" data-act="dstog" data-t="${type}" data-s="${i}"${x} title="Drop set" aria-pressed="${!!s.ds}"${dis}>DS</button>` : ''}</div></td>
+      ${ro ? '' : `<td class="x"><button class="icon-btn" data-act="row-del" data-t="${type}" data-s="${i}"${x} ${o.count <= 1 ? 'disabled' : ''} aria-label="Borrar serie">–</button></td>`}</tr>`;
+  },
   setsTable(ex, rows, type, phRows, ro) {
     if (DB.isCardio(ex)) return this.cardioTable(rows, type, phRows, ro);
-    const dis = ro ? ' disabled' : '', bw = DB.isBW(ex);
-    const col = LOADS[ex?.load || 'kg'].col;
-    const plan = type === 'plan';
+    const bw = DB.isBW(ex), col = LOADS[ex?.load || 'kg'].col;
     return `<table class="sets"><thead><tr><th>Serie</th>${bw ? '' : `<th>${col}</th>`}<th>Reps</th><th title="Al fallo / Drop set">F</th><th></th></tr></thead><tbody>
-      ${rows.map((s, i) => { const ph = phRows?.[i]; const a = `data-in="row" data-t="${type}" data-s="${i}"`, ds = s.ds && !bw;   // sin drop set en peso corporal
-        const rPh = s.f ? 'FALLO' : (ph ? (ph.r ?? (ph.f ? 'FALLO' : '–')) : '–');
-        return `<tr>
-        <td class="n">${i + 1}</td>
-        ${bw ? '' : `<td>${this.loadField(ex, s.w, a + ' data-k="w"' + dis, ro ? '–' : ph?.w)}</td>`}
-        <td class="r">${plan && s.f
-          ? `<input type="text" class="fallo" value="" placeholder="${ds ? 'FALLO+DS' : 'FALLO'}" readonly tabindex="-1" aria-label="Al fallo">`
-          : `<input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" class="${s.f ? 'fallo' : ''}" value="${s.r ?? ''}" placeholder="${ro && !s.f ? '–' : (s.f ? (ds ? 'FALLO+DS' : 'FALLO') : rPh)}" ${a} data-k="r"${dis}>${s.f && s.r != null ? `<span class="fallo-tag">${ds ? 'FALLO+DS' : 'FALLO'}</span>` : ''}`}</td>
-        <td class="f"><div class="fcell"><button class="ftog ${s.f ? 'on' : ''}" data-act="ftog" data-t="${type}" data-s="${i}" title="Al fallo" aria-pressed="${s.f}"${dis}>F</button>${s.f && !bw ? `<button class="ftog ds ${s.ds ? 'on' : ''}" data-act="dstog" data-t="${type}" data-s="${i}" title="Drop set" aria-pressed="${!!s.ds}"${dis}>DS</button>` : ''}</div></td>
-        ${ro ? '' : `<td class="x"><button class="icon-btn" data-act="row-del" data-t="${type}" data-s="${i}" ${rows.length <= 1 ? 'disabled' : ''} aria-label="Borrar serie">–</button></td>`}</tr>`; }).join('')}
+      ${rows.map((s, i) => this.setRow(ex, s, i, type, phRows?.[i], ro, { loadCol: !bw, count: rows.length })).join('')}
       </tbody></table>
       ${ro ? '' : `<button class="btn sm ghost mt" data-act="row-add" data-t="${type}">+ Serie</button>`}`;
   },
+  // biserie: series intercaladas 1A, 1B, 2A, 2B… (se hace una de cada y luego se descansa)
+  ssTable(a, b, type, ro) {
+    const k = type === 'plan' ? 'plan' : 'log', exA = DB.ex(a.exerciseId), exB = DB.ex(b.exerciseId), A = a[k], B = b[k];
+    let rows = '';
+    for (let i = 0; i < Math.max(A.length, B.length); i++) {
+      if (A[i]) rows += this.setRow(exA, A[i], i, type, type === 'log' ? a.plan[i] : null, ro, { x: a.id, label: `${i + 1}<i class="ssk a">A</i>`, cls: 'ss-a' + (i % 2 ? '' : ' ss-odd'), count: A.length });
+      if (B[i]) rows += this.setRow(exB, B[i], i, type, type === 'log' ? b.plan[i] : null, ro, { x: b.id, label: `${i + 1}<i class="ssk b">B</i>`, cls: 'ss-b' + (i % 2 ? '' : ' ss-odd'), count: B.length });
+    }
+    return `<table class="sets ss"><thead><tr><th>Serie</th><th>Carga</th><th>Reps</th><th title="Al fallo / Drop set">F</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+      ${ro ? '' : `<button class="btn sm ghost mt" data-act="row-add" data-t="${type}" data-x="both">+ Serie (A y B)</button>`}`;
+  },
+  // ejercicios de un día: las biseries van agrupadas en un recuadro
+  dayItems(items, attrs, withStatus, canSort) {
+    const grip = '<span class="grip" data-act="grip" title="Arrastra para cambiar el orden" aria-label="Reordenar">⠿</span>';
+    let h = '';
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i], nx = items[i + 1];
+      if (it.ss && nx?.ss === it.ss) {
+        h += `<div class="ss-group" data-rid="ss:${it.ss}">${canSort ? grip : ''}<div class="ss-body"><div class="ss-label">⇄ Biserie</div>${this.itemCard(it, attrs(it), withStatus, false)}${this.itemCard(nx, attrs(nx), withStatus, false)}</div></div>`;
+        i++;
+      } else h += this.itemCard(it, attrs(it), withStatus, canSort);
+    }
+    return h;
+  },
+  units(items) { let n = 0; for (let i = 0; i < items.length; i++) { n++; if (items[i].ss && items[i + 1]?.ss === items[i].ss) i++; } return n; },
   // cardio: bloques de minutos + intensidad
   cardioTable(rows, type, phRows, ro) {
     const dis = ro ? ' disabled' : '';
@@ -904,7 +1056,15 @@ const TABS = [
 const Views = {};
 const weekMon = () => U.addDays(U.monday(U.today()), ui.weekOff * 7);
 const isPast = date => date < U.today();
-const copyItems = (items, withLog) => items.map(it => { const ex = DB.ex(it.exerciseId), o = { id: U.uid(), exerciseId: it.exerciseId, plan: it.plan.map(s => DB.copyRow(ex, s)) }; if (withLog) o.log = it.plan.map(() => DB.blank(ex)); return o; });
+const copyItems = (items, withLog) => {
+  const ssMap = {};   // cada copia de una biserie recibe un id nuevo
+  return items.map(it => {
+    const ex = DB.ex(it.exerciseId), o = { id: U.uid(), exerciseId: it.exerciseId, plan: it.plan.map(s => DB.copyRow(ex, s)) };
+    if (withLog) o.log = it.plan.map(() => DB.blank(ex));
+    if (it.ss) o.ss = ssMap[it.ss] ||= U.uid();
+    return o;
+  });
+};
 
 /* ---------- Rutina: semana en horizontal ---------- */
 Views.rutina = {
@@ -931,13 +1091,15 @@ Views.rutina = {
     const TAGS = { rest: '<span class="dstate rst">Descanso</span>', miss: '<span class="dstate miss">Falta</span>', excused: '<span class="dstate excused">Justificada</span>' };
     for (let i = 0; i < 7; i++) {
       const date = U.addDays(mon, i), items = DB.day(date), st = states[i].s;
-      const canSort = !isPast(date) && items.length > 1;
+      const canSort = !isPast(date) && UI.units(items) > 1, note = Store.data.notes?.[date];
       h += `<div class="col ${date === today ? 'today' : ''}" data-sort-date="${date}">
         <div class="col-head"><b>${DAYS_S[i]} ${U.parse(date).getDate()}</b>${TAGS[st] || ''}</div>
         ${st === 'miss' ? `<button class="btn sm soft excuse" data-act="excuse" data-date="${date}">Justificar falta</button>` : ''}
         ${st === 'excused' ? `<button class="btn sm ghost excuse" data-act="excuse" data-date="${date}">Quitar justificación</button>` : ''}
-        ${items.length ? items.map(it => UI.itemCard(it, `data-act="item-open" data-date="${date}" data-id="${it.id}"`, true, canSort)).join('') : (st === 'rest' ? '' : '<div class="rest">Nada previsto</div>')}
-        ${isPast(date) ? '' : `<button class="btn add" data-act="day-add" data-date="${date}">+ Añadir ejercicio</button>`}</div>`;
+        ${items.length ? UI.dayItems(items, it => `data-act="item-open" data-date="${date}" data-id="${it.id}"`, true, canSort) : (st === 'rest' ? '' : '<div class="rest">Nada previsto</div>')}
+        ${isPast(date) ? '' : `<button class="btn add" data-act="day-add" data-date="${date}">+ Añadir ejercicio</button>`}
+        ${note ? `<button class="note-chip" data-act="note-open" data-date="${date}" title="Nota del día"><b>📝 Nota${note.r ? ` · <span class="nstars">${'★'.repeat(note.r)}</span>` : ''}</b>${note.t ? `<span>${U.esc(note.t)}</span>` : ''}</button>`
+               : `<button class="btn add note-add" data-act="note-open" data-date="${date}">+ Añadir nota</button>`}</div>`;
     }
     return h + '</div>';
   },
@@ -1050,7 +1212,7 @@ Views.ajustes = {
     return `<h2>Ajustes</h2>
       <div class="card"><div class="profile-head">${UI.avatar('lg')}<div class="grow"><h3 style="margin:0">@${U.esc(pr.username || '')}</h3>
         <div class="muted small" style="margin-top:3px">${U.esc(pr.email || '')}</div><div class="muted small">Alta el ${U.fmtY(Store.data.account.createdAt)}</div></div></div>
-        <div class="row wrap mt"><button class="btn sm" data-act="avatar-pick">${pr.avatar ? 'Cambiar foto' : 'Añadir foto'}</button>${pr.avatar ? '<button class="btn sm ghost" data-act="avatar-del">Quitar foto</button>' : ''}<button class="btn sm" data-act="user-change">Cambiar usuario</button></div>
+        <div class="row wrap mt"><button class="btn sm" data-act="avatar-pick">${pr.avatar ? 'Cambiar foto' : 'Añadir foto'}</button>${pr.avatar ? '<button class="btn sm ghost" data-act="avatar-del">Quitar foto</button>' : ''}<button class="btn sm" data-act="user-change">Cambiar nombre de usuario</button><button class="btn sm" data-act="export-csv">Exportar datos (CSV)</button></div>
         <div class="row wrap mt"><button class="btn sm" data-act="pw-change">Cambiar contraseña</button><button class="btn sm ghost danger" data-act="logout">Cerrar sesión</button></div>
         <div class="row wrap mt"><button class="btn sm ghost danger" data-act="account-del">Borrar mi cuenta</button></div>
         <input type="file" id="avatar-file" accept="image/*" hidden data-ch="avatar-file"></div>
@@ -1108,17 +1270,20 @@ const ItemSheet = {
     return r.kind === 'tpl' ? DB.tpl(r.tid)?.days[r.d] || [] : DB.day(r.date);
   },
   get() { return this.list().find(i => i.id === ui.item?.id); },
+  byId(id) { return this.list().find(i => i.id === id); },
   // días ya pasados: se pueden ver, no editar
   ro() { return ui.item?.kind === 'day' && isPast(ui.item.date); },
   remove() {
     const r = ui.item;
-    if (r.kind === 'tpl') { const t = DB.tpl(r.tid); t.days[r.d] = t.days[r.d].filter(i => i.id !== r.id); }
-    else { Store.data.days[r.date] = DB.day(r.date).filter(i => i.id !== r.id); if (!Store.data.days[r.date].length) delete Store.data.days[r.date]; }
+    if (r.kind === 'tpl') { const t = DB.tpl(r.tid); t.days[r.d] = t.days[r.d].filter(i => i.id !== r.id); DB.fixSS(t.days[r.d]); }
+    else { Store.data.days[r.date] = DB.day(r.date).filter(i => i.id !== r.id); DB.fixSS(Store.data.days[r.date]); if (!Store.data.days[r.date].length) delete Store.data.days[r.date]; }
     Store.save();
   },
   draw() {
     const box = $('#its'), it = this.get(); if (!box) return;
     if (!it) { box.innerHTML = UI.head('Ejercicio quitado'); return; }
+    const list = this.list(), mate = DB.partner(list, it);
+    if (mate) return this.drawSS(box, ...(list.indexOf(it) < list.indexOf(mate) ? [it, mate] : [mate, it]));
     const r = ui.item, ex = DB.ex(it.exerciseId), isTpl = r.kind === 'tpl', cardio = DB.isCardio(ex);
     const ro = this.ro(), sub = isTpl ? `${U.esc(DB.tpl(r.tid).name)} · ${DAYS[r.d]}` : U.fmtLong(r.date) + (ro ? ' · solo lectura' : '');
     let h = `${UI.head(U.esc(DB.exName(it.exerciseId)), sub)}
@@ -1131,7 +1296,28 @@ const ItemSheet = {
         ${UI.setsTable(ex, it.log, 'log', it.plan, ro)}</div>`;
     }
     h += ro ? '<div class="hint" style="text-align:center">Este día ya ha pasado: puedes verlo, pero no modificarlo.</div>'
-      : `<button class="btn ghost danger block" data-act="item-del">${isTpl ? 'Quitar de la rutina' : 'Quitar del día'}</button>`;
+      : `${cardio ? '' : '<button class="btn block" data-act="ss-make" style="margin-bottom:8px">⇄ Hacer biserie con otro ejercicio</button>'}
+         <button class="btn ghost danger block" data-act="item-del">${isTpl ? 'Quitar de la rutina' : 'Quitar del día'}</button>`;
+    box.innerHTML = h;
+  },
+  // biserie: los dos ejercicios en la misma ficha, con las series intercaladas
+  drawSS(box, a, b) {
+    const r = ui.item, isTpl = r.kind === 'tpl', ro = this.ro(), exA = DB.ex(a.exerciseId), exB = DB.ex(b.exerciseId);
+    const sub = (isTpl ? `${U.esc(DB.tpl(r.tid).name)} · ${DAYS[r.d]}` : U.fmtLong(r.date)) + (ro ? ' · solo lectura' : '');
+    const who = (it, ex, k) => `<div class="ss-who"><i class="ssk ${k.toLowerCase()}">${k}</i><span class="dot" style="background:${DB.color(it.exerciseId)}"></span><b>${U.esc(DB.exName(it.exerciseId))}</b><span class="muted small">${LOADS[ex?.load || 'kg'].name}</span>${isTpl ? '' : UI.status(DB.status(it))}</div>`;
+    let h = `${UI.head('⇄ Biserie', sub)}
+      <div class="card" style="padding:12px 14px">${who(a, exA, 'A')}${who(b, exB, 'B')}
+        <div class="hint">Haz una serie de A y justo después una de B; luego descansa.</div></div>
+      <div class="card sec-plan"><div class="sec-title"><h3>Previsto</h3></div>${UI.ssTable(a, b, 'plan', ro)}</div>`;
+    if (!isTpl) {
+      const la = DB.last(a.exerciseId, r.date), lb = DB.last(b.exerciseId, r.date);
+      const last = (l, ex, k) => l ? `<div>${k} · última vez (${U.fmt(l.date)}): ${l.sets.map(s => DB.setText(ex, s)).join(' · ')}</div>` : '';
+      h += `<div class="card sec-done"><div class="sec-title"><h3>Realizado</h3>${ro ? '' : '<button class="btn sm" data-act="copy-plan" data-x="both">Igual que lo previsto</button>'}</div>
+        <div class="hint" style="margin-top:0">${last(la, exA, 'A') + last(lb, exB, 'B') || 'Primera vez con estos ejercicios'}</div>
+        ${UI.ssTable(a, b, 'log', ro)}</div>`;
+    }
+    h += ro ? '<div class="hint" style="text-align:center">Este día ya ha pasado: puedes verlo, pero no modificarlo.</div>'
+      : `<div class="row"><button class="btn grow" data-act="ss-split">Separar biserie</button><button class="btn ghost danger grow" data-act="ss-del">${isTpl ? 'Quitar los dos' : 'Quitar los dos del día'}</button></div>`;
     box.innerHTML = h;
   }
 };
@@ -1144,7 +1330,7 @@ const TemplateEditor = {
     box.innerHTML = `${UI.head('Rutina prefabricada')}
       <label class="field">Nombre<input value="${U.esc(t.name)}" data-in="tpl-name" placeholder="Ej. Torso / Pierna"></label>
       <div class="card mt">${t.days.map((items, d) => `<div class="tpl-day" data-sort-tpl="${d}"><b>${DAYS[d]}</b>
-        ${items.length ? items.map(it => UI.itemCard(it, `data-act="tpl-item" data-d="${d}" data-id="${it.id}"`, false, items.length > 1)).join('') : '<div class="muted small" style="margin-top:4px">Descanso</div>'}
+        ${items.length ? UI.dayItems(items, it => `data-act="tpl-item" data-d="${d}" data-id="${it.id}"`, false, UI.units(items) > 1) : '<div class="muted small" style="margin-top:4px">Descanso</div>'}
         <button class="btn add" data-act="tpl-add" data-d="${d}">+ Añadir ejercicio</button></div>`).join('')}</div>
       <button class="btn primary block" data-act="modal-close">Listo</button>`;
   }
@@ -1237,6 +1423,17 @@ const ExerciseDetail = {
 const curItem = () => ItemSheet.get();
 const curEx = () => DB.ex(curItem()?.exerciseId);
 const rowsOf = t => curItem()?.[t === 'plan' ? 'plan' : 'log'];
+const rowItem = el => el.dataset.x && el.dataset.x !== 'both' ? ItemSheet.byId(el.dataset.x) : curItem();   // en biseries cada fila indica su ejercicio
+const rowsFor = el => rowItem(el)?.[el.dataset.t === 'plan' ? 'plan' : 'log'];
+const addRow = (it, type) => {
+  const ex = DB.ex(it.exerciseId), rows = it[type === 'plan' ? 'plan' : 'log'], p = rows[rows.length - 1];
+  if (rows.length >= LIMITS.sets) { UI.toast(`Máximo ${LIMITS.sets} series`); return false; }
+  if (DB.isCardio(ex)) rows.push(U.crow(p));
+  else rows.push(type === 'plan' ? U.row(p) : U.row({ w: p?.w, r: p?.r }));
+  // si aún no has hecho nada, lo realizado acompaña a lo previsto en número de series
+  if (type === 'plan' && it.log && !DB.validSets(it.log).length && it.log.length < it.plan.length) it.log.push(DB.blank(ex));
+  return true;
+};
 const redrawModals = () => { ItemSheet.draw(); ExerciseDetail.draw(); TemplateEditor.draw(); };
 const H = {
   tab: el => App.go(el.dataset.t),
@@ -1247,7 +1444,7 @@ const H = {
   'week-now': () => { ui.weekOff = 0; ui.stripX = null; App.render(); },
   'week-copy': () => {
     const mon = weekMon();
-    for (let i = 0; i < 7; i++) { const d = U.addDays(mon, i), src = DB.day(U.addDays(mon, i - 7)); if (!isPast(d) && src.length) Store.data.days[d] = copyItems(src, true); }
+    for (let i = 0; i < 7; i++) { const d = U.addDays(mon, i), src = DB.day(U.addDays(mon, i - 7)); if (!isPast(d) && src.length) { Store.data.days[d] = copyItems(src, true); DB.fixSS(Store.data.days[d]); } }
     Store.save(); App.render(); UI.toast('Semana copiada (solo lo previsto)');
   },
   'week-save': () => {
@@ -1283,50 +1480,84 @@ const H = {
   'item-open': el => ItemSheet.open({ kind: 'day', date: el.dataset.date, id: el.dataset.id }),
   row: el => {
     if (ItemSheet.ro()) return;
-    const s = rowsOf(el.dataset.t)?.[+el.dataset.s]; if (!s) return;
+    const s = rowsFor(el)?.[+el.dataset.s]; if (!s) return;
     if (el.tagName === 'INPUT') { const c = el.dataset.k === 'r' ? U.cleanInt(el.value) : U.cleanDec(el.value); if (c !== el.value) el.value = c; }
     s[el.dataset.k] = el.dataset.k === 'r' ? (el.value === '' ? null : parseInt(el.value)) : U.num(el.value);
     Store.save();
   },
   crow: el => {
     if (ItemSheet.ro()) return;
-    const s = rowsOf(el.dataset.t)?.[+el.dataset.s]; if (!s) return;
+    const s = rowsFor(el)?.[+el.dataset.s]; if (!s) return;
     if (el.tagName === 'INPUT') { const c = U.cleanInt(el.value); if (c !== el.value) el.value = c; }
     else el.className = el.value ? 'int' + el.value : '';
     s[el.dataset.k] = el.value === '' ? null : parseInt(el.value);
     Store.save();
   },
   ftog: el => {
-    if (ItemSheet.ro()) return; const s = rowsOf(el.dataset.t)?.[+el.dataset.s]; if (!s) return;
+    if (ItemSheet.ro()) return; const s = rowsFor(el)?.[+el.dataset.s]; if (!s) return;
     s.f = !s.f; if (!s.f) s.ds = false;
     if (s.f && el.dataset.t === 'plan') s.r = null;   // previsto al fallo: sin número
     Store.save(); ItemSheet.draw();
   },
-  dstog: el => { if (ItemSheet.ro() || DB.isBW(curEx())) return; const s = rowsOf(el.dataset.t)?.[+el.dataset.s]; if (!s || !s.f) return; s.ds = !s.ds; Store.save(); ItemSheet.draw(); },
+  dstog: el => { if (ItemSheet.ro() || DB.isBW(DB.ex(rowItem(el)?.exerciseId))) return; const s = rowsFor(el)?.[+el.dataset.s]; if (!s || !s.f) return; s.ds = !s.ds; Store.save(); ItemSheet.draw(); },
   'row-add': el => {
     if (ItemSheet.ro()) return;
-    const it = curItem(), ex = curEx(), rows = rowsOf(el.dataset.t), p = rows[rows.length - 1];
-    if (rows.length >= LIMITS.sets) return UI.toast(`Máximo ${LIMITS.sets} series`);
-    if (DB.isCardio(ex)) rows.push(U.crow(p));
-    else rows.push(el.dataset.t === 'plan' ? U.row(p) : U.row({ w: p?.w, r: p?.r }));
-    // si aún no has hecho nada, lo realizado acompaña a lo previsto en número de series
-    if (el.dataset.t === 'plan' && it.log && !DB.validSets(it.log).length && it.log.length < it.plan.length) it.log.push(DB.blank(ex));
-    Store.save(); ItemSheet.draw();
+    const it = curItem(), targets = el.dataset.x === 'both' ? [it, DB.partner(ItemSheet.list(), it)].filter(Boolean) : [rowItem(el)];
+    let any = false; for (const t of targets) any = addRow(t, el.dataset.t) || any;
+    if (any) { Store.save(); ItemSheet.draw(); }
   },
   'row-del': el => {
     if (ItemSheet.ro()) return;
-    const it = curItem(), rows = rowsOf(el.dataset.t);
+    const it = rowItem(el), rows = rowsFor(el); if (!it || !rows) return;
     if (rows.length <= 1) return UI.toast('Mínimo 1 serie');
     rows.splice(+el.dataset.s, 1);
     if (el.dataset.t === 'plan' && it.log && !DB.validSets(it.log).length && it.log.length > it.plan.length) it.log.length = it.plan.length;
     Store.save(); ItemSheet.draw();
   },
-  'copy-plan': () => {
+  'copy-plan': el => {
     if (ItemSheet.ro()) return;
-    const it = curItem(), ex = curEx();
-    if (DB.validSets(it.log).length && !confirm('¿Sustituir lo realizado por lo previsto?')) return;
-    it.log = it.plan.map(s => DB.copyRow(ex, s)); Store.save(); ItemSheet.draw();
+    const it = curItem(), items = el?.dataset.x === 'both' ? [it, DB.partner(ItemSheet.list(), it)].filter(Boolean) : [it];
+    if (items.some(x => DB.validSets(x.log).length) && !confirm('¿Sustituir lo realizado por lo previsto?')) return;
+    for (const x of items) { const ex = DB.ex(x.exerciseId); x.log = x.plan.map(s => DB.copyRow(ex, s)); }
+    Store.save(); ItemSheet.draw();
   },
+  // biseries
+  'ss-make': () => {
+    if (ItemSheet.ro()) return;
+    const it = curItem(), cands = ItemSheet.list().filter(x => x.id !== it.id && !x.ss && !DB.isCardio(DB.ex(x.exerciseId)));
+    if (!cands.length) return UI.toast('Añade otro ejercicio de fuerza a este día para hacer una biserie');
+    UI.open(`${UI.head('Hacer biserie con…', U.esc(DB.exName(it.exerciseId)))}
+      ${cands.map(c => `<div class="list-item clickable" data-act="ss-pick" data-id="${c.id}"><span class="dot" style="background:${DB.color(c.exerciseId)}"></span>
+        <div class="grow bold">${U.esc(DB.exName(c.exerciseId))}</div><span style="color:var(--accent);font-weight:800">Unir</span></div>`).join('')}
+      <div class="hint">El ejercicio elegido se colocará justo después de ${U.esc(DB.exName(it.exerciseId))}.</div>`);
+  },
+  'ss-pick': el => {
+    const list = ItemSheet.list(), it = curItem(), other = list.find(x => x.id === el.dataset.id); if (!it || !other) return;
+    list.splice(list.indexOf(other), 1); list.splice(list.indexOf(it) + 1, 0, other);
+    it.ss = other.ss = U.uid(); DB.fixSS(list);
+    Store.save(); UI.close(); ItemSheet.draw(); UI.toast('Biserie creada');
+  },
+  'ss-split': () => {
+    if (ItemSheet.ro()) return;
+    const it = curItem(), mate = DB.partner(ItemSheet.list(), it); delete it.ss; if (mate) delete mate.ss;
+    Store.save(); ItemSheet.draw(); UI.toast('Biserie separada');
+  },
+  'ss-del': () => {
+    if (ItemSheet.ro()) return;
+    const r = ui.item, it = curItem(), mate = DB.partner(ItemSheet.list(), it);
+    if (!confirm(`¿Quitar los dos ejercicios de la biserie${r.kind === 'tpl' ? ' de la rutina' : ' del día? Se borra también lo que hayas apuntado'}?`)) return;
+    const ids = new Set([it.id, mate?.id]);
+    if (r.kind === 'tpl') { const t = DB.tpl(r.tid); t.days[r.d] = t.days[r.d].filter(i => !ids.has(i.id)); }
+    else { Store.data.days[r.date] = DB.day(r.date).filter(i => !ids.has(i.id)); if (!Store.data.days[r.date].length) delete Store.data.days[r.date]; }
+    Store.save(); H['modal-close']();
+  },
+  // nota del día
+  'note-open': el => Notes.open(el.dataset.date),
+  'note-rate': el => { const v = +el.dataset.v; ui.noteR = ui.noteR === v ? 0 : v; $$('.sheet [data-act="note-rate"]').forEach(b => b.classList.toggle('on', +b.dataset.v <= ui.noteR)); },
+  'note-save': () => Notes.save(),
+  'note-del': () => Notes.remove(),
+  // exportar
+  'export-csv': () => Export.csv(),
   'item-del': () => {
     if (ItemSheet.ro()) return;
     if (!confirm(ui.item.kind === 'tpl' ? '¿Quitar este ejercicio de la rutina?' : '¿Quitar este ejercicio del día? Se borra también lo que hayas apuntado.')) return;
@@ -1403,6 +1634,8 @@ const H = {
   logout: () => App.logout(),
   'ask-yes': () => { const f = ui.askYes; ui.askYes = null; H['modal-close'](); f?.(); },
   grip: () => {},   // el asa de reordenar no abre el ejercicio
+  'app-update': () => Updater.apply(),
+  'update-later': () => $('#update-bar')?.remove(),
   'cal-open': () => Cal.open(),
   'cal-shift': el => { const d = U.parse(ui.calMonth); d.setMonth(d.getMonth() + +el.dataset.n); ui.calMonth = U.iso(d); Cal.draw(); },
   'cal-today': () => { ui.calMonth = U.today().slice(0, 8) + '01'; Cal.draw(); },
@@ -1436,7 +1669,7 @@ const H = {
   'avatar-del': () => UI.ask('Quitar foto', '¿Quitar tu foto de perfil?', async () => {
     try { await Cloud.updateProfile({ avatar: null }); App.render(); UI.toast('Foto quitada'); } catch (e) { UI.toast(Look.profileError(e)); }
   }),
-  'user-change': () => UI.open(`${UI.head('Cambiar usuario')}
+  'user-change': () => UI.open(`${UI.head('Cambiar nombre de usuario')}
     <form data-form="userchange" novalidate>
       <label class="field">Nuevo nombre de usuario<input name="user" value="${U.esc(Cloud.profile?.username || '')}" autocomplete="username" autocapitalize="none" spellcheck="false"></label>
       <div class="hint">De 3 a 20 caracteres: letras, números, punto o guion bajo. Podrás entrar con el nuevo.</div>
@@ -1491,7 +1724,7 @@ const H = {
     if (error) { Auth.busy(f, false); return Auth.msg(f, /function|not find|schema cache/i.test(error.message) ? 'Falta ejecutar el SQL actualizado en Supabase.' : Auth.translate(error)); }
     const uid = Cloud.user.id; clearTimeout(Cloud.timer);
     Cloud.user = null; Cloud.profile = null; Cloud.dirty = false; Store.data = null;
-    try { localStorage.removeItem(STORAGE_KEY + '.' + uid); } catch {}
+    try { [STORAGE_KEY + '.', PENDING_KEY, PROFILE_KEY].forEach(k => localStorage.removeItem(k + uid)); } catch {}
     await Cloud.sb.auth.signOut().catch(() => {});
     App.applyTheme(); Auth.show('login', { ok: 'Tu cuenta y todos tus datos se han borrado.' });
   },
@@ -1572,7 +1805,7 @@ const Look = {
 const Reorder = {
   init() { document.addEventListener('pointerdown', e => { const g = e.target.closest('.grip'); if (g) this.start(e, g); }); },
   start(e, grip) {
-    const item = grip.closest('.item'), box = item?.parentElement; if (!box) return;
+    const item = grip.closest('.item, .ss-group'), box = item?.parentElement; if (!box) return;
     e.preventDefault(); e.stopPropagation();
     this.item = item; this.box = box; this.before = this.order(); this.pid = e.pointerId;
     item.classList.add('lifted'); document.body.classList.add('sorting');
@@ -1585,7 +1818,7 @@ const Reorder = {
     };
     addEventListener('pointermove', move, { passive: false }); addEventListener('pointerup', end); addEventListener('pointercancel', end);
   },
-  items() { return [...this.box.querySelectorAll(':scope > .item')]; },
+  items() { return [...this.box.querySelectorAll(':scope > .item, :scope > .ss-group')]; },
   order() { return this.items().map(x => x.dataset.rid); },
   // el ejercicio cambia de hueco al pasar por la mitad del de al lado
   move(y) {
@@ -1604,7 +1837,9 @@ const Reorder = {
     if (this.box.dataset.sortDate) list = Store.data.days[this.box.dataset.sortDate];
     else if (this.box.dataset.sortTpl != null) list = DB.tpl(ui.tplId)?.days[+this.box.dataset.sortTpl];
     if (!list) return;
-    list.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id));
+    const order = [];   // una biserie ("ss:id") se expande a sus dos ejercicios, en su orden
+    for (const id of ids) { if (id.startsWith('ss:')) list.filter(x => x.ss === id.slice(3)).forEach(x => order.push(x.id)); else order.push(id); }
+    list.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id)); DB.fixSS(list);
     Store.save(); UI.toast('Orden actualizado');
   }
 };
@@ -1690,6 +1925,101 @@ const Crop = {
       if (!square) UI.close();
       App.render(); UI.toast('Foto actualizada');
     } catch (e) { UI.toast(Look.profileError(e)); }
+  }
+};
+
+/* Nota del día: valoración del entreno (1-5) y observaciones. Se puede poner en cualquier día,
+   también en los pasados (es la excepción a la regla de solo lectura), para valorar después de entrenar. */
+const Notes = {
+  MAX: 1000,
+  open(date) {
+    const n = Store.data.notes?.[date]; ui.noteDate = date; ui.noteR = n?.r || 0;
+    UI.open(`${UI.head('Nota del día', U.fmtLong(date))}
+      <div class="field">Valoración del entreno</div>
+      <div class="stars note-stars">${[1, 2, 3, 4, 5].map(v => `<button class="star ${v <= ui.noteR ? 'on' : ''}" data-act="note-rate" data-v="${v}" aria-label="${v} de 5">★</button>`).join('')}</div>
+      <label class="field mt">Observaciones<textarea id="note-text" maxlength="${this.MAX}" placeholder="Sensaciones, energía, molestias, qué mejorar…">${U.esc(n?.t || '')}</textarea></label>
+      <div class="row mt2">${n ? '<button class="btn ghost danger grow" data-act="note-del">Borrar nota</button>' : ''}<button class="btn primary grow" data-act="note-save">Guardar</button></div>`);
+  },
+  save() {
+    const t = ($('#note-text')?.value || '').trim().slice(0, this.MAX), r = ui.noteR || null;
+    if (!t && !r) return this.remove(true);
+    (Store.data.notes ||= {})[ui.noteDate] = { r, t };
+    Store.save(); H['modal-close'](); UI.toast('Nota guardada');
+  },
+  remove(silent) {
+    if (Store.data.notes?.[ui.noteDate]) { delete Store.data.notes[ui.noteDate]; Store.save(); if (!silent) UI.toast('Nota borrada'); }
+    H['modal-close']();
+  }
+};
+
+/* Exportar todos los datos a CSV (se abre en Excel). Una fila por serie; separador ";" y UTF-8 con BOM. */
+const Export = {
+  cell(v) {
+    if (v == null) return '';
+    let s = typeof v === 'number' ? String(v).replace('.', ',') : String(v);
+    return /[;"\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  },
+  rows() {
+    const d = Store.data, out = [['Fecha', 'Día', 'Ejercicio', 'Grupo', 'Músculo', 'Tipo de carga', 'Previsto/Realizado', 'Serie', 'Peso', 'Reps', 'Fallo', 'Drop set', 'Minutos', 'Intensidad', 'Estado', 'Biserie', 'Nota del día']];
+    const dates = [...new Set([...Object.keys(d.days || {}), ...Object.keys(d.notes || {})])].sort();
+    for (const date of dates) {
+      const items = d.days[date] || [], n = d.notes?.[date], dia = DAYS[U.dow(date)];
+      const note = n ? [n.r ? n.r + '/5' : '', n.t || ''].filter(Boolean).join(' · ') : '';
+      if (!items.length) { out.push([date, dia, '', '', '', '', '', '', '', '', '', '', '', '', '', '', note]); continue; }
+      for (const it of items) {
+        const ex = DB.ex(it.exerciseId), g = ex ? DB.group(ex.group).name : '', st = DB.status(it), mate = DB.partner(items, it);
+        const base = [date, dia, DB.exName(it.exerciseId), g, ex?.muscle || '', LOADS[ex?.load || 'kg']?.name || ''];
+        const estado = st === '-' ? '−' : st || '', bis = mate ? 'Sí, con ' + DB.exName(mate.exerciseId) : '';
+        for (const [k, label] of [['plan', 'Previsto'], ['log', 'Realizado']]) (it[k] || []).forEach((s, i) => {
+          if (k === 'log' && !DB.done(s)) return;   // series realizadas vacías no se exportan
+          const cardio = DB.isCardio(ex), noW = cardio || DB.isBW(ex);
+          out.push([...base, label, i + 1, noW ? '' : s.w, cardio ? '' : s.r, !cardio && s.f ? 'Sí' : '', !cardio && s.ds ? 'Sí' : '',
+            cardio ? s.m : '', cardio && s.i ? INTENSITY[s.i - 1] : '', estado, bis, note]);
+        });
+      }
+    }
+    return out;
+  },
+  async csv() {
+    const text = '\ufeff' + this.rows().map(r => r.map(c => this.cell(c)).join(';')).join('\r\n');
+    const name = `gymtrack-${Cloud.profile?.username || 'datos'}-${U.today()}.csv`;
+    const blob = new Blob([text], { type: 'text/csv;charset=utf-8' });
+    // en el móvil se abre el menú de compartir (guardar en Archivos, enviar…); en el ordenador se descarga
+    try {
+      const file = new File([blob], name, { type: 'text/csv' });
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title: 'GymTrack' }); return; }
+    } catch (e) { if (e?.name === 'AbortError') return; }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    UI.toast('Datos exportados');
+  }
+};
+
+/* ===================== AVISO DE VERSIÓN NUEVA =====================
+   Compara APP_VERSION con version.json (que se publica junto a la app). Al subir una versión nueva
+   hay que actualizar los tres: APP_VERSION aquí, version.json y VERSION en sw.js.                  */
+const Updater = {
+  reg: null,
+  newer(a, b) { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; },
+  async check() {
+    if (!/^https?:$/.test(location.protocol)) return;
+    try {
+      const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' }); if (!r.ok) return;
+      const { version } = await r.json();
+      if (version && this.newer(version, APP_VERSION)) this.show(version);
+    } catch { /* sin conexión */ }
+  },
+  show(v) {
+    if ($('#update-bar')) return;
+    const b = document.createElement('div'); b.id = 'update-bar'; b.className = 'update-bar';
+    b.innerHTML = `<span>Hay una versión nueva <b>v${U.esc(v)}</b></span><button class="btn sm primary" data-act="app-update">Actualizar</button><button class="icon-btn" data-act="update-later" aria-label="Más tarde">✕</button>`;
+    document.body.appendChild(b);
+  },
+  async apply() {
+    const b = $('#update-bar'); if (b) b.querySelector('.btn').textContent = 'Actualizando…';
+    try { await Cloud.flush(); } catch {}
+    try { await this.reg?.update(); } catch {}
+    location.reload();
   }
 };
 
@@ -1785,12 +2115,18 @@ const App = {
     Cloud.user = user; Cloud.dirty = false; Cloud.lastRemote = null; Store.use(user.id);
     let profile = null, remote = null, offline = false;
     try { [profile, remote] = await Promise.all([Cloud.fetchProfile(), Cloud.fetchData()]); } catch { offline = true; }
-    Cloud.profile = profile || { username: user.user_metadata?.username || '', email: user.email, created_at: user.created_at };
-    if (remote) { Store.data = Migrations.run(remote.data); Cloud.lastRemote = remote.updated_at; Store.save(false); Cloud.setStatus('saved'); }
-    else if (offline) {
-      const c = Store.cached();
-      if (!c) { Cloud.user = null; return Auth.show('login', { err: 'No hay conexión con el servidor. Inténtalo de nuevo en un momento.' }); }
-      Store.data = Migrations.run(c); Cloud.setStatus('offline');
+    Cloud.profile = profile || Cloud.cachedProfile() || { username: user.user_metadata?.username || '', email: user.email, created_at: user.created_at };
+    const pending = Cloud.pending(), cache = Store.cached();
+    if (remote) {
+      let d = Migrations.run(remote.data);
+      // cambios hechos en este dispositivo que no llegaron a subirse: se fusionan con la nube, no se pierden
+      if (pending && cache) d = Sync.merge(Migrations.run(cache), d).data;
+      Store.set(d); Cloud.lastRemote = remote.updated_at; Store.save(false);
+      if (pending) { Cloud.dirty = true; Cloud.setStatus('saving'); setTimeout(() => Cloud.flush(), 0); } else Cloud.setStatus('saved');
+    } else if (offline) {
+      if (!cache) { Cloud.user = null; return Auth.show('login', { err: 'No hay conexión con el servidor. Inténtalo de nuevo en un momento.' }); }
+      Store.set(Migrations.run(cache)); Cloud.dirty = pending; Cloud.setStatus('offline');
+      setTimeout(() => UI.toast('Sin conexión: puedes seguir apuntando, se subirá al volver'), 300);
     } else {
       // cuenta nueva: fecha de alta y días por semana elegidos en el registro
       const created = U.iso(new Date(Cloud.profile.created_at || Date.now())), goal = Math.min(7, Math.max(1, +user.user_metadata?.goal || DEFAULT_GOAL));
@@ -1801,12 +2137,13 @@ const App = {
         try { localStorage.setItem(STORAGE_KEY + '.importado', localStorage.getItem(STORAGE_KEY)); localStorage.removeItem(STORAGE_KEY); } catch {}
       }
       d.account = { createdAt: created, goals: [{ from: U.monday(created), n: goal }] };
-      Store.data = d; Store.save(); await Cloud.flush();
+      Store.set(d); Store.save(); await Cloud.flush();
     }
     document.body.classList.remove('auth');
     try { const t = sessionStorage.getItem('gymtrack.tab'); ui.tab = t && Views[t] ? t : 'rutina'; } catch { ui.tab = 'rutina'; }
     ui.weekOff = 0; ui.stripX = null;
     this.applyTheme(); this.render();
+    Updater.check();
   },
   async logout() {
     if (Cloud.dirty || Cloud.saving) await Cloud.flush();
@@ -1826,6 +2163,8 @@ const App = {
         <li>Pégalas en <code>SUPABASE_URL</code> y <code>SUPABASE_ANON_KEY</code>, al principio del script de este archivo.</li></ol>`}</div></div>`;
   },
   async init() {
+    // modo sin conexión: el service worker guarda la app en el dispositivo (solo funciona desde la web, no abriendo el archivo)
+    if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').then(r => { Updater.reg = r; }).catch(() => {});
     document.addEventListener('submit', e => { const f = e.target.closest('form[data-form]'); if (!f) return; e.preventDefault(); H['form-' + f.dataset.form]?.(f); });
     document.addEventListener('click', e => {
       const el = e.target.closest('[data-act]'); if (!el || el.disabled) return;
@@ -1843,8 +2182,11 @@ const App = {
       if (ev === 'PASSWORD_RECOVERY') { Auth.recovering = true; Auth.show('recover'); }
       if (ev === 'SIGNED_OUT' && Cloud.user) { Cloud.user = null; Store.data = null; Auth.show(); }   // sesión caducada o cerrada en otro sitio
     });
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') Cloud.refresh(); else Cloud.flush(); });
-    addEventListener('online', () => Cloud.flush());
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { Cloud.refresh(); Updater.check(); } else Cloud.flush(); });
+    setInterval(() => { if (document.visibilityState === 'visible') Cloud.refresh(); }, 60000);          // cambios de otros dispositivos
+    setInterval(() => { if (document.visibilityState === 'visible') Updater.check(); }, 30 * 60000);    // versión nueva publicada
+    addEventListener('online', () => { if (Cloud.user) { Cloud.setStatus('saving'); Cloud.refresh(); } });
+    addEventListener('offline', () => Cloud.setStatus('offline'));
     addEventListener('pagehide', () => Cloud.flush());
     let session = null;
     try { session = (await Cloud.sb.auth.getSession()).data.session; } catch {}

@@ -10,7 +10,7 @@ const VERSION = '6.0.0';
 const CACHE = 'gymtrack-' + VERSION;
 const CORE = [
   './', './index.html', './manifest.webmanifest',
-  './icon-192.png', './icon-512.png', './icon-maskable.png', './apple-touch-icon.png',
+  './icon-192-v2.png', './icon-512-v2.png', './icon-maskable-v2.png', './apple-touch-icon-v2.png',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js'
 ];
 

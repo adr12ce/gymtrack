@@ -7,7 +7,7 @@
    Al publicar una versión nueva, cambia VERSION (y también APP_VERSION en index.html y version.json).
    ========================================================= */
 const VERSION = '6.0.0';
-const CACHE = 'gymtrack-' + VERSION;
+const CACHE = 'gymtrack-' + VERSION + '-b2';   // cambia la parte final para forzar que se renueve la copia guardada
 const CORE = [
   './', './index.html', './manifest.webmanifest',
   './icon-192-v2.png', './icon-512-v2.png', './icon-maskable-v2.png', './apple-touch-icon-v2.png',
@@ -32,15 +32,15 @@ self.addEventListener('fetch', e => {
   if (url.hostname.endsWith('supabase.co') || url.hostname.endsWith('supabase.in')) return;   // datos: siempre a la red
   if (url.pathname.endsWith('/version.json')) return;                                          // comprobar versión: siempre a la red
 
-  // la página: primero la red (sin la caché del navegador) y, si no hay conexión, la copia guardada
-  if (req.mode === 'navigate' || (url.origin === location.origin && url.pathname.endsWith('/index.html'))) {
+  // la página y el manifiesto (nombre e icono de la app): primero la red y, sin conexión, la copia guardada
+  if (req.mode === 'navigate' || (url.origin === location.origin && (url.pathname.endsWith('/index.html') || url.pathname.endsWith('.webmanifest')))) {
     e.respondWith(
       fetch(new Request(url.href, { cache: 'no-cache', credentials: 'same-origin' }))
         .then(res => {
-          if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put('./index.html', copy)); }
+          if (res.ok) { const copy = res.clone(), key = url.pathname.endsWith('.webmanifest') ? './manifest.webmanifest' : './index.html'; caches.open(CACHE).then(c => c.put(key, copy)); }
           return res;
         })
-        .catch(() => caches.match('./index.html').then(r => r || caches.match('./')))
+        .catch(() => url.pathname.endsWith('.webmanifest') ? caches.match('./manifest.webmanifest') : caches.match('./index.html').then(r => r || caches.match('./')))
     );
     return;
   }

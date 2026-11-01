@@ -509,6 +509,9 @@ main .chips::-webkit-scrollbar{display:none}
 .pick-g.empty{opacity:.5}
 .pick-back{margin:2px 0 6px}
 .sessions{font-size:12px;color:var(--muted);margin:8px 2px 4px}
+.tpl-dh{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tpl-dh .icon-btn{width:34px;height:34px;padding:0}
+.tpl-dh .icon-btn .ic{width:17px;height:17px}
 /* nota */
 .note-chip{background:var(--card-2);border-radius:12px;padding:9px 11px}
 .note-chip b{display:flex;align-items:center;gap:5px}
@@ -610,7 +613,7 @@ const LOADS = {
   cardio: { name: 'Minutos e intensidad', col: 'Min' }
 };
 const INTENSITY = ['Baja','Moderada','Alta'];   // se guarda como 1, 2, 3
-const MAX_PLATES = 50;
+const MAX_PLATES = 35;
 // Límites (evitan abusos y que una cuenta llene la base de datos)
 const LIMITS = { exercises: 300, perDay: 30, sets: 30, templates: 30 };
 // Colores de acento (sustituyen al rojo). l = modo claro, d = modo oscuro: [principal, degradado, fondo suave, texto]
@@ -645,7 +648,9 @@ const IC = {
   play: '<path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5Z"/>',
   up: '<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>', hold: '<path d="M5 9h14"/><path d="M5 15h14"/>',
   timer: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M10 2h4"/>',
-  minus: '<path d="M5 12h14"/>'
+  minus: '<path d="M5 12h14"/>',
+  copy: '<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+  paste: '<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 14h6"/><path d="M12 11v6"/>'
 };
 const I = (n, cls = '') => `<svg class="ic ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -1233,7 +1238,7 @@ const UI = {
   // campo de carga según el tipo del ejercicio (placas = desplegable 1–50)
   loadField(ex, val, attrs, ph) {
     if (ex?.load === 'plates') {
-      return `<select ${attrs}><option value="">${ph != null && ph !== '–' ? '(' + ph + ')' : '–'}</option>${Array.from({ length: MAX_PLATES }, (_, i) => `<option ${val === i + 1 ? 'selected' : ''}>${i + 1}</option>`).join('')}</select>`;
+      return `<select ${attrs}><option value="">${ph != null && ph !== '–' ? '(' + ph + ')' : '–'}</option>${Array.from({ length: Math.max(MAX_PLATES, val || 0) }, (_, i) => `<option ${val === i + 1 ? 'selected' : ''}>${i + 1}</option>`).join('')}</select>`;
     }
     return `<input type="text" inputmode="decimal" autocomplete="off" value="${val != null ? String(val).replace('.', ',') : ''}" placeholder="${ph != null ? String(ph).replace('.', ',') : '–'}" ${attrs}>`;
   },
@@ -1674,7 +1679,7 @@ const ItemSheet = {
     let h = `${UI.head(U.esc(DB.exName(it.exerciseId)), sub)}
       <div class="row wrap" style="margin:-4px 0 12px">${UI.tag(ex)}<span class="muted small">${cardio ? 'Minutos e intensidad' : 'Carga: ' + LOADS[ex?.load || 'kg'].name}</span></div>
       ${!isTpl && !ro ? UI.sugg(it, r.date) : ''}
-      <div class="card sec-plan"><div class="sec-title"><h3>Previsto</h3></div>${UI.setsTable(ex, it.plan, 'plan', null, ro)}</div>`;
+      <div class="card sec-plan"><div class="sec-title"><h3>Previsto</h3>${!ro && DB.last(it.exerciseId, isTpl ? U.today() : r.date) ? '<button class="btn sm" data-act="copy-last">Copiar última vez</button>' : ''}</div>${UI.setsTable(ex, it.plan, 'plan', null, ro)}</div>`;
     if (!isTpl) {
       const st = DB.status(it);
       h += `<div class="card sec-done"><div class="sec-title"><h3>Realizado</h3><div class="row">${UI.status(st)}${ro ? '' : '<button class="btn sm" data-act="copy-plan">Igual que lo previsto</button>'}</div></div>
@@ -1692,7 +1697,7 @@ const ItemSheet = {
     const who = (it, j) => { const ex = DB.ex(it.exerciseId); return `<div class="ss-who" data-rid="${it.id}">${ro ? '' : `<span class="grip" data-act="grip" title="Arrastra para cambiar el orden" aria-label="Reordenar">${I('grip')}</span>`}<i class="ssk ${L[j].toLowerCase()}">${L[j]}</i><span class="dot" style="background:${DB.color(it.exerciseId)}"></span><b>${U.esc(DB.exName(it.exerciseId))}</b><span class="muted small">${LOADS[ex?.load || 'kg'].name}</span>${isTpl ? '' : UI.status(DB.status(it))}${ro ? '' : `<button class="icon-btn" data-act="ss-out" data-id="${it.id}" title="Sacar de la ${name.toLowerCase()}" aria-label="Sacar">${I('x')}</button>`}</div>`; };
     let h = `${UI.head(name, sub)}
       <div class="card ss-whos" data-sort-ss="1" style="padding:8px 12px">${group.map(who).join('')}</div>
-      <div class="card sec-plan"><div class="sec-title"><h3>Previsto</h3></div>${UI.ssTable(group, 'plan', ro)}</div>`;
+      <div class="card sec-plan"><div class="sec-title"><h3>Previsto</h3>${!ro && group.some(g => DB.last(g.exerciseId, isTpl ? U.today() : r.date)) ? '<button class="btn sm" data-act="copy-last" data-x="both">Copiar última vez</button>' : ''}</div>${UI.ssTable(group, 'plan', ro)}</div>`;
     if (!isTpl) {
       h += `<div class="card sec-done"><div class="sec-title"><h3>Realizado</h3>${ro ? '' : '<button class="btn sm" data-act="copy-plan" data-x="both">Igual que lo previsto</button>'}</div>
         ${UI.ssTable(group, 'log', ro)}</div>`;
@@ -1712,7 +1717,10 @@ const TemplateEditor = {
     if (!t) { box.innerHTML = UI.head('Rutina eliminada'); return; }
     box.innerHTML = `${UI.head('Rutina prefabricada')}
       <label class="field">Nombre<input value="${U.esc(t.name)}" data-in="tpl-name" placeholder="Ej. Torso / Pierna"></label>
-      <div class="card mt">${t.days.map((items, d) => `<div class="tpl-day" data-sort-tpl="${d}"><b>${DAYS[d]}</b>
+      <div class="card mt">${t.days.map((items, d) => `<div class="tpl-day" data-sort-tpl="${d}"><div class="tpl-dh"><b>${DAYS[d]}</b><div class="row" style="gap:2px">
+          <button class="icon-btn" data-act="tpl-copy" data-d="${d}" title="Copiar día" aria-label="Copiar día" ${items.length ? '' : 'disabled'}>${I('copy')}</button>
+          <button class="icon-btn" data-act="tpl-paste" data-d="${d}" title="Pegar día" aria-label="Pegar día" ${ui.tplClip ? '' : 'disabled'}>${I('paste')}</button>
+          <button class="icon-btn" data-act="tpl-clear" data-d="${d}" title="Vaciar día" aria-label="Vaciar día" ${items.length ? '' : 'disabled'}>${I('trash')}</button></div></div>
         ${items.length ? UI.dayItems(items, it => `data-act="tpl-item" data-d="${d}" data-id="${it.id}"`, false, true) : '<div class="muted small" style="margin-top:4px">Descanso</div>'}
         <button class="btn add" data-act="tpl-add" data-d="${d}">+ Añadir ejercicio</button></div>`).join('')}</div>
       <button class="btn primary block" data-act="modal-close">Listo</button>`;
@@ -1735,7 +1743,7 @@ const ExerciseForm = {
       <button class="btn primary block mt2" data-act="exf-save">Guardar</button>`);
   },
   loadSeg() { return ['kg', 'side', 'plates', 'bw', ...(this.group === 'abdominales' ? ['secs'] : [])].map(k => `<button class="${k === this.loadType ? 'on' : ''}" data-act="exf-load" data-v="${k}">${LOADS[k].name}</button>`).join(''); },
-  loadHint() { return { kg: 'Peso total en kg (ej. 80 kg).', side: 'Peso de cada lado (ej. 15 kg por lado → 15 - 15).', plates: 'Número de placa de la máquina, de 1 a 50.', bw: 'Repeticiones con tu peso (dominadas, fondos…). Si usas lastre, apunta los kg extra en «+Kg».', secs: 'Duración en segundos de cada serie (plancha, hollow…).' }[this.loadType]; },
+  loadHint() { return { kg: 'Peso total en kg (ej. 80 kg).', side: 'Peso de cada lado (ej. 15 kg por lado → 15 - 15).', plates: 'Número de placa de la máquina, de 1 a 35.', bw: 'Repeticiones con tu peso (dominadas, fondos…). Si usas lastre, apunta los kg extra en «+Kg».', secs: 'Duración en segundos de cada serie (plancha, hollow…).' }[this.loadType]; },
   muscles(gid, sel) { return DB.group(gid).muscles.map(m => `<option ${m === sel ? 'selected' : ''}>${m}</option>`).join(''); },
   // en cardio el tipo es el nombre, salvo "Otro"
   needsName(gid, muscle) { return !DB.group(gid).cardio || muscle === 'Otro'; },
@@ -1909,6 +1917,20 @@ const H = {
     for (const x of items) { const ex = DB.ex(x.exerciseId); x.log = x.plan.map(s => DB.copyRow(ex, s)); }
     Store.save(); ItemSheet.draw();
   },
+  // previsto = lo que hiciste la última vez (en biseries, en todos los que lo tengan)
+  'copy-last': el => {
+    if (ItemSheet.ro()) return;
+    const r = ui.item, date = r.kind === 'tpl' ? U.today() : r.date, it = curItem();
+    const items = el.dataset.x === 'both' ? DB.mates(ItemSheet.list(), it) : [it];
+    let n = 0;
+    for (const x of items) {
+      const last = DB.last(x.exerciseId, date); if (!last) continue;
+      const ex = DB.ex(x.exerciseId); x.plan = last.sets.slice(0, LIMITS.sets).map(s => DB.copyRow(ex, s)); n++;
+      if (x.log && !DB.validSets(x.log).length) x.log = x.plan.map(() => DB.blank(ex));   // lo realizado acompaña en nº de series
+    }
+    if (!n) return;
+    Store.save(); ItemSheet.draw(); UI.toast('Copiado de la última vez');
+  },
   // biseries
   'ss-make': () => {
     if (ItemSheet.ro()) return;
@@ -1986,6 +2008,16 @@ const H = {
   'rest-set': el => { const R = Train.cfg(); Store.data.settings.rest = { ...R, [el.dataset.k]: +el.value }; Store.save(); },
   // nota del día
   'note-open': el => Notes.open(el.dataset.date),
+  'tpl-copy': el => { const t = DB.tpl(ui.tplId); if (!t) return; ui.tplClip = { items: t.days[+el.dataset.d], from: DAYS[+el.dataset.d] }; ui.tplClip.items = copyItems(ui.tplClip.items, false); TemplateEditor.draw(); UI.toast(`${ui.tplClip.from} copiado`); },
+  'tpl-paste': el => {
+    const t = DB.tpl(ui.tplId), d = +el.dataset.d; if (!t || !ui.tplClip) return;
+    const go = () => { t.days[d] = copyItems(ui.tplClip.items, false); DB.fixSS(t.days[d]); Store.save(); TemplateEditor.draw(); UI.toast(`Pegado en ${DAYS[d]}`); };
+    if (t.days[d].length) UI.ask('Pegar día', `${DAYS[d]} ya tiene ejercicios. Se sustituirán por los de ${ui.tplClip.from}.<br><br>¿Continuar?`, () => { go(); }); else go();
+  },
+  'tpl-clear': el => {
+    const t = DB.tpl(ui.tplId), d = +el.dataset.d; if (!t || !t.days[d].length) return;
+    UI.ask('Vaciar día', `Se quitarán los ${t.days[d].length} ejercicios del ${DAYS[d].toLowerCase()} de esta rutina.<br><br>¿Vaciar el día?`, () => { t.days[d] = []; Store.save(); TemplateEditor.draw(); UI.toast(`${DAYS[d]} vaciado`); });
+  },
   'prof-toggle': () => { ui.profOpen = !ui.profOpen; App.render(); },
   'note-rate': el => { if (Notes.locked(ui.noteDate)) return; const v = +el.dataset.v; ui.noteR = ui.noteR === v ? 0 : v; $$('.sheet [data-act="note-rate"]').forEach(b => b.classList.toggle('on', +b.dataset.v <= ui.noteR)); },
   'note-save': () => Notes.save(),
@@ -2789,6 +2821,12 @@ const App = {
       const f = H[el.dataset.act]; if (f) { e.preventDefault(); e.stopPropagation(); f(el, e); }
     });
     document.addEventListener('input', e => { const el = e.target.closest('[data-in]'); if (el) H[el.dataset.in]?.(el, e); });
+    // Enter en el formulario de un ejercicio guarda (como pulsar «Guardar»)
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Enter' || e.isComposing || e.target.tagName !== 'INPUT') return;
+      const sheet = e.target.closest('.sheet'); if (!sheet || !$('[data-act="exf-save"]', sheet)) return;
+      e.preventDefault(); ExerciseForm.save();
+    });
     document.addEventListener('change', e => { const el = e.target.closest('[data-ch]'); if (el) H[el.dataset.ch]?.(el, e); });
     let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => Chart.redrawAll(), 150); });
     matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => Chart.redrawAll());

@@ -422,6 +422,68 @@ main .chips::-webkit-scrollbar{display:none}
 /* cabeceras de tarjeta: la etiqueta baja de línea si no cabe */
 .card > .row.between,.card > .clickable > .row.between{flex-wrap:wrap;row-gap:6px}
 .tag{white-space:nowrap}
+/* filtros en el ordenador: se arrastran */
+@media (pointer:fine){main .chips{cursor:grab}main .chips.dragging{cursor:grabbing}}
+.chips.dragging{user-select:none}.chips.dragging *{pointer-events:none}
+/* sugerencia de progresión */
+.sugg{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:16px;padding:10px 12px;margin:0 0 12px;box-shadow:inset 0 0 0 1px var(--line)}
+.sugg > .ic{width:30px;height:30px;padding:6px;border-radius:50%;background:var(--card-2);color:var(--muted)}
+.sugg.up > .ic{background:var(--ok-soft);color:var(--ok)}
+.sugg b{font-size:14px}
+/* botón Entrenar */
+.train-btn{padding:6px 11px;font-size:12.5px}
+.train-btn .ic{width:12px;height:12px}
+/* modo entreno de hoy: pantalla completa */
+.sheet.full{max-height:none;height:100%;border-radius:0;max-width:560px;display:flex;flex-direction:column;padding-top:calc(14px + env(safe-area-inset-top))}
+@media(min-width:760px){.sheet.full{height:auto;max-height:94vh;border-radius:26px}}
+.sheet.full::before{display:none}
+.modal-bg:has(.sheet.full){align-items:stretch}
+@media(min-width:760px){.modal-bg:has(.sheet.full){align-items:center}}
+#train{display:flex;flex-direction:column;gap:12px;flex:1}
+.tr-head{display:flex;align-items:center;justify-content:space-between}
+.tr-kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-text)}
+.tr-count{font-weight:750;font-size:14px;color:var(--muted)}
+.tr-x{background:var(--card-2);border-radius:50%;width:34px;height:34px;padding:0}
+.tr-bar{height:6px;border-radius:4px;background:var(--card-2);overflow:hidden}
+.tr-bar i{display:block;height:100%;background:var(--accent);border-radius:4px;transition:width .3s}
+.tr-ex{background:var(--card);border-radius:22px;padding:18px 18px 16px;box-shadow:inset 4px 0 0 var(--c),var(--shadow)}
+.tr-ss{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-text);margin-bottom:6px}
+.tr-ss .ic{width:13px;height:13px}.tr-ss .ssk{margin:0}
+.tr-name{font-size:28px;margin:0 0 4px;letter-spacing:-.035em;line-height:1.1}
+.tr-sub{color:var(--muted);font-weight:600}
+.tr-sub b{color:var(--text)}
+.tr-sub .up{font-weight:700}
+.tr-plan{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:2px 4px}
+.tr-plan b{font-size:16px;text-align:right}
+.tr-inputs{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
+.tr-inputs .tr-fbtn{grid-column:1 / -1}
+.tr-inputs.cardio{grid-template-columns:1fr}
+.tr-field{background:var(--card);border-radius:18px;padding:10px 8px 8px;box-shadow:var(--shadow)}
+.tr-lbl{font-size:11.5px;font-weight:700;color:var(--muted);text-align:center;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.tr-ctl{display:flex;align-items:center;gap:4px}
+.tr-ctl input{text-align:center;font-size:26px;font-weight:800;padding:8px 2px;background:transparent;letter-spacing:-.02em}
+.tr-ctl input::placeholder{color:var(--muted);opacity:.55;font-size:18px}
+.tr-pm{background:var(--card-2);border-radius:12px;width:40px;height:44px;padding:0;flex:none;color:var(--text)}
+.tr-fbtn{border:none;font:inherit;font-weight:750;border-radius:14px;padding:11px;background:var(--card-2);color:var(--muted);cursor:pointer}
+.tr-fbtn.on{background:var(--bad);color:#fff}
+.tr-int{display:flex;width:100%}.tr-int button{flex:1;padding:10px 4px}
+.tr-go{font-size:17px;padding:16px;border-radius:16px;margin-top:auto}
+.tr-go .ic{width:20px;height:20px;stroke-width:2.6}
+.tr-nav .btn .ic{width:16px;height:16px}
+.tr-next{text-align:center;color:var(--muted);font-size:13.5px;padding-bottom:4px}
+.tr-next b{color:var(--text)}
+.tr-rest{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px}
+.tr-ring{position:relative;width:min(70vw,260px);aspect-ratio:1;margin:8px 0}
+.tr-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.tr-ring circle{fill:none;stroke-width:7;stroke-linecap:round}
+.tr-ring .bg{stroke:var(--card-2)}
+.tr-ring .fg{stroke:var(--accent);stroke-dasharray:100;transition:stroke-dashoffset .25s linear}
+.tr-clock{position:absolute;inset:0;display:grid;place-items:center;font-size:56px;font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.tr-rest .tr-nav{width:100%}
+.tr-end{text-align:center;padding:18px 0 4px}
+.tr-end h2{margin:10px 0 4px;font-size:28px}
+.tr-done-ic{width:64px;height:64px;border-radius:50%;background:var(--ok-soft);color:var(--ok);display:grid;place-items:center;margin:0 auto}
+.tr-done-ic .ic{width:32px;height:32px;stroke-width:2.6}
 /* nota */
 .note-chip{background:var(--card-2);border-radius:12px;padding:9px 11px}
 .note-chip b{display:flex;align-items:center;gap:5px}
@@ -518,7 +580,8 @@ const LOADS = {
   kg:     { name: 'Kg',       col: 'Kg' },
   side:   { name: 'Por lado', col: 'Kg/lado' },
   plates: { name: 'Placas',   col: 'Placa' },
-  bw:     { name: 'Peso corporal', col: '' },   // solo repeticiones
+  bw:     { name: 'Peso corporal', col: '+Kg' },   // repeticiones y, si quieres, kg extra (lastre)
+  secs:   { name: 'Segundos', col: '' },        // solo abdominales: duración (plancha…)
   cardio: { name: 'Minutos e intensidad', col: 'Min' }
 };
 const INTENSITY = ['Baja','Moderada','Alta'];   // se guarda como 1, 2, 3
@@ -553,7 +616,11 @@ const IC = {
   link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
   note: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>',
   heart: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
-  check: '<path d="M20 6 9 17l-5-5"/>', plus: '<path d="M5 12h14"/><path d="M12 5v14"/>'
+  check: '<path d="M20 6 9 17l-5-5"/>', plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+  play: '<path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5Z"/>',
+  up: '<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>', hold: '<path d="M5 9h14"/><path d="M5 15h14"/>',
+  timer: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M10 2h4"/>',
+  minus: '<path d="M5 12h14"/>'
 };
 const I = (n, cls = '') => `<svg class="ic ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -582,6 +649,8 @@ const U = {
   row: (s = {}) => ({ w: s.w ?? null, r: s.r ?? null, f: !!s.f, ds: !!(s.f && s.ds) }),   // serie de fuerza (f = al fallo, ds = drop set)
   crow: (s = {}) => ({ m: s.m ?? null, i: s.i ?? null }),            // bloque de cardio: minutos + intensidad (1-3)
   // duración: 45 min · 2 h 10 min · 1 d 3 h 5 min (sin días ni horas si no llegan)
+  secs: n => { n = Math.round(n || 0); const m = Math.floor(n / 60), x = n % 60; return m ? `${m} min${x ? ' ' + x + ' s' : ''}` : `${x} s`; },
+  clock: n => { n = Math.max(0, Math.ceil(n)); return `${Math.floor(n / 60)}:${String(n % 60).padStart(2, '0')}`; },
   dur: min => { min = Math.round(min || 0); const d = Math.floor(min / 1440), h = Math.floor(min % 1440 / 60), m = min % 60, p = []; if (d) p.push(d + ' d'); if (h) p.push(h + ' h'); if (m || !p.length) p.push(m + ' min'); return p.join(' '); },
   // solo números: decimales (coma o punto) para la carga, enteros para reps y minutos
   cleanDec: v => { let s = v.replace(/[^0-9.,]/g, ''); const i = s.search(/[.,]/); if (i >= 0) s = s.slice(0, i + 1) + s.slice(i + 1).replace(/[.,]/g, ''); return s; },
@@ -816,19 +885,31 @@ const DB = {
   done: s => !!s && (s.r > 0 || !!s.f || s.m > 0),             // serie/bloque realizado
   validSets(sets) { return (sets || []).filter(this.done); },
   isBW(ex) { return ex?.load === 'bw'; },
+  isTime(ex) { return ex?.load === 'secs'; },
+  noDS(ex) { return ex?.load === 'bw' || ex?.load === 'secs'; },   // sin drop set
+  unit(ex) { return ex?.load === 'secs' ? 's' : 'reps'; },
+  // texto de la carga de una serie ('' si no lleva): 80 kg · PC + 10 kg …
+  wText(ex, w) { if (this.isTime(ex)) return ''; if (this.isBW(ex)) return w > 0 ? this.load(ex, w) : ''; return w != null ? this.load(ex, w) : ''; },
   blank(ex) { return this.isCardio(ex) ? U.crow() : U.row(); },
   copyRow(ex, s) { return this.isCardio(ex) ? U.crow(s) : U.row(s); },
   newPlan(ex) { return this.isCardio(ex) ? [U.crow({ m: 30, i: 2 })] : Array.from({ length: 3 }, () => U.row({ r: 10 })); },
   // carga mostrada según el tipo: 80 kg · 15 - 15 · 12 pl
   load(ex, w) {
     const t = ex?.load || 'kg';
-    if (t === 'bw') return 'Corporal';
+    if (t === 'bw') return w > 0 ? `PC + ${U.kg(w)} kg` : 'Corporal';
+    if (t === 'secs') return '—';
     if (w == null) return '–';
     return t === 'side' ? `${U.kg(w)} - ${U.kg(w)}` : t === 'plates' ? `${w} pl` : `${U.kg(w)} kg`;
   },
   reps: s => { const f = s.f ? (s.ds ? 'fallo + DS' : 'fallo') : ''; return s.r != null ? (f ? `${s.r} (${f})` : `${s.r}`) : (f ? f.toUpperCase() : '?'); },
   planReps: s => s.f ? (s.ds ? 'FALLO + DS' : 'FALLO') : (s.r ?? '?'),   // en lo previsto el fallo no lleva número
-  setText(ex, s) { if (this.isBW(ex) && s.ds) s = { ...s, ds: false }; return this.isCardio(ex) ? `${s.m ?? '?'} min${s.i ? ' ' + INTENSITY[s.i - 1].toLowerCase() : ''}` : this.isBW(ex) ? `${this.reps(s)} reps` : `${this.load(ex, s.w || 0)} × ${this.reps(s)}`; },
+  setText(ex, s) {
+    if (this.noDS(ex) && s.ds) s = { ...s, ds: false };
+    if (this.isCardio(ex)) return `${s.m ?? '?'} min${s.i ? ' ' + INTENSITY[s.i - 1].toLowerCase() : ''}`;
+    if (this.isTime(ex)) return `${this.reps(s)} s`;
+    if (this.isBW(ex)) return s.w > 0 ? `${this.load(ex, s.w)} × ${this.reps(s)}` : `${this.reps(s)} reps`;
+    return `${this.load(ex, s.w || 0)} × ${this.reps(s)}`;
+  },
   stats(sets, ex) {
     const v = this.validSets(sets); if (!v.length) return null;
     if (this.isCardio(ex)) {
@@ -836,10 +917,10 @@ const DB = {
       v.forEach(x => { if (x.i) byInt[x.i - 1] += x.m || 0; });
       return { cardio: true, mins, byInt, maxM: mins, n: v.length, maxW: 0, best: 0, vol: 0, maxR: 0, reps: 0, top: null };
     }
-    const t = ex?.load || 'kg', mult = t === 'side' ? 2 : 1, bw = t === 'bw';
+    const t = ex?.load || 'kg', mult = t === 'side' ? 2 : 1, bw = t === 'bw' || t === 'secs';
     let maxW = 0, best = 0, vol = 0, maxR = 0, top = null, reps = 0;
     for (const s of v) {
-      const w = bw ? 0 : s.w || 0, r = s.r || 0, e1 = bw ? r : U.epley(w, r || 1);   // peso corporal: manda el nº de reps
+      const w = t === 'secs' ? 0 : s.w || 0, r = s.r || 0, e1 = bw ? r + w / 100 : U.epley(w, r || 1);   // peso corporal y segundos: mandan las reps (el lastre desempata)
       maxW = Math.max(maxW, w); maxR = Math.max(maxR, r); reps += r;
       if (!top || e1 > best) { best = e1; top = s; }
       if (t !== 'plates' && !bw) vol += w * mult * r;   // placas y peso corporal no son kg: no cuentan para el volumen
@@ -871,7 +952,7 @@ const DB = {
     return { maxW, maxWDate, best, top, bestDate, maxR, maxRDate, mostReps, mostRepsDate, sessions: h.length, last: h[h.length - 1].date };
   },
   repMax(exId) {        // peso máximo levantado para cada número de repeticiones
-    const ex = this.ex(exId); if (this.isCardio(ex) || this.isBW(ex)) return [];
+    const ex = this.ex(exId); if (this.isCardio(ex) || this.isBW(ex) || this.isTime(ex)) return [];
     const map = {};
     for (const x of this.history(exId)) for (const s of x.sets) {
       if (!(s.r > 0)) continue;
@@ -882,14 +963,14 @@ const DB = {
   },
   planText(ex, plan) {
     if (!plan.length) return '';
-    if (this.isBW(ex)) plan = plan.map(r => ({ ...r, ds: false }));
+    if (this.noDS(ex)) plan = plan.map(r => ({ ...r, ds: false }));
     if (this.isCardio(ex)) return plan.map(s => this.setText(ex, s)).join(' · ');
-    const same = plan.every(s => (this.isBW(ex) || s.w === plan[0].w) && (s.f || s.r === plan[0].r) && s.f === plan[0].f && !!s.ds === !!plan[0].ds), n = plan.length, p = plan[0];
+    const u = this.unit(ex), same = plan.every(s => (this.isTime(ex) || s.w === plan[0].w) && (s.f || s.r === plan[0].r) && s.f === plan[0].f && !!s.ds === !!plan[0].ds), n = plan.length, p = plan[0];
     if (same) {
-      const reps = p.f ? (p.ds ? 'Al fallo + DS' : 'Al fallo') : p.r != null ? `${p.r} reps` : '? reps';
-      return `${reps} × ${n} ${n === 1 ? 'serie' : 'series'}${p.w != null && !this.isBW(ex) ? ' · ' + this.load(ex, p.w) : ''}`;
+      const reps = p.f ? (p.ds ? 'Al fallo + DS' : 'Al fallo') : p.r != null ? `${p.r} ${u}` : `? ${u}`, w = this.wText(ex, p.w);
+      return `${reps} × ${n} ${n === 1 ? 'serie' : 'series'}${w ? ' · ' + w : ''}`;
     }
-    return plan.map(s => (s.w != null && !this.isBW(ex) ? this.load(ex, s.w) + ' × ' : '') + this.planReps(s)).join(' · ');
+    return plan.map(s => { const w = this.wText(ex, s.w); return (w ? w + ' × ' : '') + this.planReps(s) + (s.f ? '' : this.isTime(ex) ? ' s' : w ? '' : ' reps'); }).join(' · ');
   },
   /* Estado de un ejercicio: compara REALIZADO con PREVISTO serie a serie.
      Fuerza: con carga en ambos se compara el 1RM estimado (peso y reps a la vez); si no, las reps.
@@ -914,11 +995,34 @@ const DB = {
   },
   status(it) {
     if (!this.validSets(it.log).length) return null;
-    const ex = this.ex(it.exerciseId), c = this.isCardio(ex), bw = this.isBW(ex); let s = 0;
-    const noW = r => r && bw ? { ...r, w: null } : r;
+    const ex = this.ex(it.exerciseId), c = this.isCardio(ex), t = this.isTime(ex); let s = 0;
+    const noW = r => r && t ? { ...r, w: null } : r;
     it.plan.forEach((p, i) => { s += c ? this.cmpCardio(p, it.log[i]) : this.cmpSet(noW(p), noW(it.log[i])); });
     s += it.log.slice(it.plan.length).filter(this.done).length;
     return s > 0 ? '+' : s < 0 ? '-' : '=';
+  },
+  /* Sugerencia de progresión (doble progresión), mirando la última sesión anterior del ejercicio:
+     si completaste todo lo previsto → subir (peso, o reps/segundos si no hay peso); si no → mantener. */
+  STEP: { kg: 2.5, side: 1, plates: 1, bw: 2.5 },
+  suggest(it, date) {
+    const ex = this.ex(it?.exerciseId); if (!ex || this.isCardio(ex)) return null;
+    let prev = null;
+    for (const d of Object.keys(this.d.days).sort().reverse()) {
+      if (d >= date) continue;
+      prev = this.d.days[d].find(i => i.exerciseId === ex.id && this.validSets(i.log).length); if (prev) break;
+    }
+    if (!prev) return null;
+    const done = prev.plan.length && prev.plan.every((p, i) => { const l = prev.log[i]; return this.done(l) && (p.f || p.r == null || (l.r || 0) >= p.r); }) && this.status(prev) !== '-';
+    const t = ex.load, maxW = Math.max(0, ...this.validSets(prev.log).map(x => x.w || 0));
+    const byWeight = t !== 'secs' && (t !== 'bw' || maxW > 0) && maxW > 0;
+    if (!done) return { up: false, text: byWeight ? `Mantén ${this.load(ex, maxW)} hasta completar todas las ${this.unit(ex) === 's' ? 'series' : 'repeticiones'}` : 'Repite lo de la última vez hasta completarlo' };
+    if (byWeight) { const nw = t === 'plates' ? Math.min(MAX_PLATES, maxW + 1) : Math.round((maxW + this.STEP[t]) * 100) / 100; return { up: true, text: `Sube a ${this.load(ex, nw)}`, w: nw }; }
+    const dr = t === 'secs' ? 5 : 1;
+    return { up: true, text: t === 'secs' ? `Sube ${dr} s por serie` : 'Sube 1 repetición por serie', dr };
+  },
+  applySuggest(it, sg) {
+    for (const p of it.plan) { if (sg.w != null) p.w = sg.w; if (sg.dr && !p.f) p.r = (p.r || 0) + sg.dr; }
+    it.sg = 1;
   },
   // biserie / triserie: 2 o 3 ejercicios seguidos con el mismo "ss" (A, B, C según el orden)
   SS_MAX: 3,
@@ -1099,7 +1203,7 @@ const UI = {
   exSub(e) {
     const rec = DB.records(e.id);
     if (DB.isCardio(e)) return `${U.esc(e.muscle)}${rec ? ` · Total ${U.dur(rec.mins)}` : ''}`;
-    return `${U.esc(e.muscle)}${e.load !== 'kg' ? ' · ' + LOADS[e.load].name : ''}${rec ? (DB.isBW(e) ? ` · Máx ${rec.maxR} reps` : ` · Máx ${DB.load(e, rec.maxW)}`) : ''}`;
+    return `${U.esc(e.muscle)}${e.load !== 'kg' ? ' · ' + LOADS[e.load].name : ''}${rec ? (DB.isBW(e) || DB.isTime(e) ? ` · Máx ${rec.maxR} ${DB.unit(e)}` : ` · Máx ${DB.load(e, rec.maxW)}`) : ''}`;
   },
   // campo de carga según el tipo del ejercicio (placas = desplegable 1–50)
   loadField(ex, val, attrs, ph) {
@@ -1110,10 +1214,10 @@ const UI = {
   },
   // una fila de serie de fuerza. o = { x: id del ejercicio (en biseries), label, cls, count, loadCol }
   setRow(ex, s, i, type, ph, ro, o = {}) {
-    const dis = ro ? ' disabled' : '', bw = DB.isBW(ex), plan = type === 'plan', x = o.x ? ` data-x="${o.x}"` : '';
-    const a = `data-in="row" data-t="${type}" data-s="${i}"${x}`, ds = s.ds && !bw;   // sin drop set en peso corporal
+    const dis = ro ? ' disabled' : '', bw = DB.noDS(ex), plan = type === 'plan', x = o.x ? ` data-x="${o.x}"` : '';
+    const a = `data-in="row" data-t="${type}" data-s="${i}"${x}`, ds = s.ds && !bw;   // sin drop set en peso corporal ni en segundos
     const rPh = s.f ? 'FALLO' : (ph ? (ph.r ?? (ph.f ? 'FALLO' : '–')) : '–');
-    const load = o.loadCol === false ? '' : bw ? '<td class="na">—</td>' : `<td>${this.loadField(ex, s.w, a + ' data-k="w"' + dis, ro ? '–' : ph?.w)}</td>`;
+    const load = o.loadCol === false ? '' : DB.isTime(ex) ? '<td class="na">—</td>' : `<td>${this.loadField(ex, s.w, a + ' data-k="w"' + dis, ro ? '–' : ph?.w ?? (DB.isBW(ex) ? '+0' : null))}</td>`;
     return `<tr class="${o.cls || ''}">
       ${o.lead ?? `<td class="n">${o.label || i + 1}</td>`}${load}
       <td class="r">${plan && s.f
@@ -1124,9 +1228,9 @@ const UI = {
   },
   setsTable(ex, rows, type, phRows, ro) {
     if (DB.isCardio(ex)) return this.cardioTable(rows, type, phRows, ro);
-    const bw = DB.isBW(ex), col = LOADS[ex?.load || 'kg'].col;
-    return `<table class="sets"><thead><tr><th>Serie</th>${bw ? '' : `<th>${col}</th>`}<th>Reps</th><th title="Al fallo / Drop set">F</th><th></th></tr></thead><tbody>
-      ${rows.map((s, i) => this.setRow(ex, s, i, type, phRows?.[i], ro, { loadCol: !bw, count: rows.length })).join('')}
+    const noW = DB.isTime(ex), col = LOADS[ex?.load || 'kg'].col;
+    return `<table class="sets"><thead><tr><th>Serie</th>${noW ? '' : `<th>${col}</th>`}<th>${noW ? 'Seg' : 'Reps'}</th><th title="Al fallo / Drop set">F</th><th></th></tr></thead><tbody>
+      ${rows.map((s, i) => this.setRow(ex, s, i, type, phRows?.[i], ro, { loadCol: !noW, count: rows.length })).join('')}
       </tbody></table>
       ${ro ? '' : `<button class="btn sm ghost mt" data-act="row-add" data-t="${type}">+ Serie</button>`}`;
   },
@@ -1143,7 +1247,7 @@ const UI = {
         return this.setRow(ex, g[k][i], i, type, type === 'log' ? g.plan[i] : null, ro, { x: g.id, lead, count: g[k].length });
       }).join('') + '</tbody>';
     }
-    return `<table class="sets ss"><thead><tr><th>Serie</th><th></th><th>Carga</th><th>Reps</th><th title="Al fallo / Drop set">F</th>${ro ? '' : '<th></th>'}</tr></thead>${body}</table>
+    return `<table class="sets ss"><thead><tr><th>Serie</th><th></th><th>Carga</th><th>${group.every(g => DB.isTime(DB.ex(g.exerciseId))) ? 'Seg' : 'Reps'}</th><th title="Al fallo / Drop set">F</th>${ro ? '' : '<th></th>'}</tr></thead>${body}</table>
       ${ro ? '' : `<button class="btn sm ghost mt" data-act="row-add" data-t="${type}" data-x="both">+ Serie (${group.map((_, j) => L[j]).join(', ').replace(/, (\w)$/, ' y $1')})</button>`}`;
   },
   // ejercicios de un día: las biseries/triseries van agrupadas en un recuadro
@@ -1179,6 +1283,12 @@ const UI = {
     const ex = DB.ex(it.exerciseId), st = withStatus ? DB.status(it) : null;
     return `<div class="item" style="--c:${DB.color(it.exerciseId)}" data-rid="${it.id}" ${attrs}>${grip ? `<span class="grip" data-act="grip" title="Arrastra para cambiar el orden" aria-label="Reordenar">${I('grip')}</span>` : ''}
       <div class="grow"><div class="name">${U.esc(DB.exName(it.exerciseId))}</div>${withStatus === 'bare' ? '' : `<div class="meta">${U.esc(withStatus ? this.planShort(ex, it.plan) : DB.planText(ex, it.plan))}</div>`}</div>${this.status(st)}</div>`;
+  },
+  // sugerencia de progresión con botón para aplicarla a lo previsto
+  sugg(it, date) {
+    const sg = DB.suggest(it, date); if (!sg) return '';
+    const btn = sg.up && !it.sg && !DB.validSets(it.log).length ? `<button class="btn sm primary" data-act="sugg-apply" data-id="${it.id}">Aplicar</button>` : it.sg ? `<span class="muted small">${I('check', 'sm')} Aplicada</span>` : '';
+    return `<div class="sugg ${sg.up ? 'up' : ''}">${I(sg.up ? 'up' : 'hold')}<div class="grow"><div class="small muted">Sugerencia</div><b>${U.esc(sg.text)}</b></div>${btn}</div>`;
   },
   // resumen corto: "3 series · 80 kg" / "20 min"
   planShort(ex, plan) {
@@ -1322,7 +1432,7 @@ Views.rutina = {
       const date = U.addDays(mon, i), items = DB.day(date), st = states[i].s;
       const canSort = !isPast(date), note = Store.data.notes?.[date];
       h += `<div class="col ${date === today ? 'today' : ''}" data-sort-date="${date}">
-        <div class="col-head"><b>${DAYS_S[i]} ${U.parse(date).getDate()}</b>${TAGS[st] || ''}</div>
+        <div class="col-head"><b>${DAYS_S[i]} ${U.parse(date).getDate()}</b>${date === today && items.length ? `<button class="btn sm primary train-btn" data-act="train-open" data-date="${date}">${I('play', 'filled')}Entrenar</button>` : TAGS[st] || ''}</div>
         ${st === 'miss' ? `<button class="btn sm soft excuse" data-act="excuse" data-date="${date}">Justificar falta</button>` : ''}
         ${st === 'excused' ? `<button class="btn sm ghost excuse" data-act="excuse" data-date="${date}">Quitar justificación</button>` : ''}
         ${items.length ? UI.dayItems(items, it => `data-act="item-open" data-date="${date}" data-id="${it.id}"`, true, canSort) : (st === 'rest' ? '' : '<div class="rest">Nada previsto</div>')}
@@ -1364,8 +1474,17 @@ const Drag = {
   }
 };
 
+// rueda del ratón vertical → desplazamiento horizontal (filas que no caben)
+const hWheel = el => el.addEventListener('wheel', e => {
+  if (el.scrollWidth <= el.clientWidth || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+  const max = el.scrollWidth - el.clientWidth, before = el.scrollLeft;
+  if ((e.deltaY < 0 && before <= 0) || (e.deltaY > 0 && before >= max - 1)) return;
+  e.preventDefault(); el.scrollLeft = before + e.deltaY;
+}, { passive: false });
+
 /* ---------- Ejercicios ---------- */
 Views.ejercicios = {
+  mount(el) { const c = $('.chips', el); if (c) { Drag.attach(c); hWheel(c); } },
   html() {
     return `<div class="row between"><h2>Ejercicios</h2><button class="btn sm primary" data-act="ex-new">+ Nuevo</button></div>
       <input type="search" class="ex-search" placeholder="Buscar ejercicio…" value="${U.esc(ui.q)}" data-in="ex-q" autocomplete="off">
@@ -1420,9 +1539,9 @@ Views.progreso = {
         <div class="stats mt">${DB.isCardio(e)
           ? `<div class="stat"><b>${r ? U.dur(r.mins) : '–'}</b><span>Tiempo total</span></div>
              <div class="stat"><b>${r ? U.dur(r.longest) : '–'}</b><span>Sesión más larga</span>${r ? `<i>${U.fmtY(r.longestDate)}</i>` : ''}</div>`
-          : DB.isBW(e)
-          ? `<div class="stat"><b>${r ? r.maxR + ' reps' : '–'}</b><span>Más repeticiones en una serie</span>${r ? `<i>${U.fmtY(r.maxRDate)}</i>` : ''}</div>
-             <div class="stat"><b>${r ? r.mostReps + ' reps' : '–'}</b><span>Mejor sesión (total)</span>${r ? `<i>${U.fmtY(r.mostRepsDate)}</i>` : ''}</div>`
+          : DB.isBW(e) || DB.isTime(e)
+          ? `<div class="stat"><b>${r ? r.maxR + ' ' + DB.unit(e) : '–'}</b><span>${DB.isTime(e) ? 'Serie más larga' : 'Más repeticiones en una serie'}</span>${r ? `<i>${U.fmtY(r.maxRDate)}</i>` : ''}</div>
+             <div class="stat"><b>${r ? (DB.isTime(e) ? U.secs(r.mostReps) : r.mostReps + ' reps') : '–'}</b><span>Mejor sesión (total)</span>${r ? `<i>${U.fmtY(r.mostRepsDate)}</i>` : ''}</div>`
           : `<div class="stat"><b>${r ? DB.load(e, r.maxW) : '–'}</b><span>Peso máximo</span>${r ? `<i>${U.fmtY(r.maxWDate)}</i>` : ''}</div>
              <div class="stat"><b>${r ? DB.load(e, r.top.w || 0) + ' × ' + DB.reps(r.top) : '–'}</b><span>Mejor serie</span>${r ? `<i>${U.fmtY(r.bestDate)}</i>` : ''}</div>`}</div></div>`; }).join('')
         : `<div class="card empty">Marca ejercicios con ${I('heart')} en <b>Ejercicios</b> para ver aquí sus récords.</div>`}`;
@@ -1448,6 +1567,7 @@ Views.ajustes = {
       <div class="card"><h3>Días de gym por semana</h3>
         <div class="seg goal-seg">${[1, 2, 3, 4, 5, 6, 7].map(k => `<button class="${k === n ? 'on' : ''}" data-act="goal" data-v="${k}">${k}</button>`).join('')}</div>
         <div class="hint">Con ${n} ${n === 1 ? 'día' : 'días'} tienes ${7 - n} ${7 - n === 1 ? 'descanso' : 'descansos'} a la semana. Si lo cambias, vale desde esta semana; las anteriores mantienen su objetivo.</div></div>
+      ${Train.settingsCard()}
       <div class="card"><div class="row between"><h3 style="margin:0">Rutinas prefabricadas</h3><button class="btn sm primary" data-act="tpl-new">+ Nueva</button></div>
         <div class="mt">${tpls.length ? tpls.map(tp => {
           const n = tp.days.reduce((s, d) => s + d.length, 0), dd = tp.days.map((d, i) => d.length ? DAYS_S[i] : null).filter(Boolean);
@@ -1517,6 +1637,7 @@ const ItemSheet = {
     const ro = this.ro(), sub = isTpl ? `${U.esc(DB.tpl(r.tid).name)} · ${DAYS[r.d]}` : U.fmtLong(r.date) + (ro ? ' · solo lectura' : '');
     let h = `${UI.head(U.esc(DB.exName(it.exerciseId)), sub)}
       <div class="row wrap" style="margin:-4px 0 12px">${UI.tag(ex)}<span class="muted small">${cardio ? 'Minutos e intensidad' : 'Carga: ' + LOADS[ex?.load || 'kg'].name}</span></div>
+      ${!isTpl && !ro ? UI.sugg(it, r.date) : ''}
       <div class="card sec-plan"><div class="sec-title"><h3>Previsto</h3></div>${UI.setsTable(ex, it.plan, 'plan', null, ro)}</div>`;
     if (!isTpl) {
       const last = DB.last(it.exerciseId, r.date), st = DB.status(it);
@@ -1569,6 +1690,7 @@ const ExerciseForm = {
   open(id, onSaved) {
     const e = id ? DB.ex(id) : null; this.id = id; this.onSaved = onSaved; this.loadType = e && !DB.isCardio(e) ? e.load : 'kg';
     const g0 = e?.group || (GROUPS.some(g => g.id === ui.pick?.g) && ui.pick.g) || (GROUPS.some(g => g.id === ui.group) && ui.group) || GROUPS[0].id;
+    this.group = g0;
     const m0 = e?.muscle || DB.group(g0).muscles[0];
     UI.open(`${UI.head(e ? 'Editar ejercicio' : 'Nuevo ejercicio')}
       <div class="row"><label class="field grow">Grupo<select id="exf-g" data-ch="exf-group">${GROUPS.map(g => `<option value="${g.id}" ${g.id === g0 ? 'selected' : ''}>${g.name}</option>`).join('')}</select></label>
@@ -1579,8 +1701,8 @@ const ExerciseForm = {
       <div class="hint" id="exf-cardio-hint" ${DB.group(g0).cardio ? '' : 'hidden'}>En cardio el nombre es el tipo (solo pide nombre si eliges “Otro”) y apuntarás minutos e intensidad en lugar de kg y repeticiones.</div>
       <button class="btn primary block mt2" data-act="exf-save">Guardar</button>`);
   },
-  loadSeg() { return ['kg', 'side', 'plates', 'bw'].map(k => `<button class="${k === this.loadType ? 'on' : ''}" data-act="exf-load" data-v="${k}">${LOADS[k].name}</button>`).join(''); },
-  loadHint() { return { kg: 'Peso total en kg (ej. 80 kg).', side: 'Peso de cada lado (ej. 15 kg por lado → 15 - 15).', plates: 'Número de placa de la máquina, de 1 a 50.', bw: 'Sin peso: solo apuntarás repeticiones (dominadas, fondos, flexiones…).' }[this.loadType]; },
+  loadSeg() { return ['kg', 'side', 'plates', 'bw', ...(this.group === 'abdominales' ? ['secs'] : [])].map(k => `<button class="${k === this.loadType ? 'on' : ''}" data-act="exf-load" data-v="${k}">${LOADS[k].name}</button>`).join(''); },
+  loadHint() { return { kg: 'Peso total en kg (ej. 80 kg).', side: 'Peso de cada lado (ej. 15 kg por lado → 15 - 15).', plates: 'Número de placa de la máquina, de 1 a 50.', bw: 'Repeticiones con tu peso (dominadas, fondos…). Si usas lastre, apunta los kg extra en «+Kg».', secs: 'Duración en segundos de cada serie (plancha, hollow…).' }[this.loadType]; },
   muscles(gid, sel) { return DB.group(gid).muscles.map(m => `<option ${m === sel ? 'selected' : ''}>${m}</option>`).join(''); },
   // en cardio el tipo es el nombre, salvo "Otro"
   needsName(gid, muscle) { return !DB.group(gid).cardio || muscle === 'Otro'; },
@@ -1627,10 +1749,12 @@ const ExerciseDetail = {
       body = `<div class="stats mt"><div class="stat"><b>${rec ? U.dur(rec.mins) : '–'}</b><span>Tiempo total</span></div><div class="stat"><b>${rec ? U.dur(rec.longest) : '–'}</b><span>Sesión más larga</span>${rec ? `<i>${U.fmtY(rec.longestDate)}</i>` : ''}</div></div>
         <div class="card mt"><h3>Minutos por intensidad</h3>${rec ? `<table class="rm"><tbody>${INTENSITY.map((n, i) => `<tr><td><span class="tag" style="--c:${['var(--ok)', '#d97706', 'var(--bad)'][i]}">${n}</span></td><td class="w r">${U.dur(rec.byInt[i])}</td></tr>`).join('')}</tbody></table>
           <div class="hint">${rec.sessions} ${rec.sessions === 1 ? 'sesión' : 'sesiones'} en total.</div>` : '<div class="empty">Aparecerá cuando registres sesiones realizadas</div>'}</div>`;
-    } else if (DB.isBW(e)) {
-      body = `<div class="stats mt"><div class="stat"><b>${rec ? rec.maxR + ' reps' : '–'}</b><span>Más repeticiones en una serie</span>${rec ? `<i>${U.fmtY(rec.maxRDate)}</i>` : ''}</div>
-        <div class="stat"><b>${rec ? rec.mostReps + ' reps' : '–'}</b><span>Mejor sesión (total)</span>${rec ? `<i>${U.fmtY(rec.mostRepsDate)}</i>` : ''}</div></div>
-        <div class="hint mt">${rec ? `${rec.sessions} ${rec.sessions === 1 ? 'sesión' : 'sesiones'} · peso corporal (solo repeticiones).` : 'Aparecerá cuando registres series realizadas.'}</div>`;
+    } else if (DB.isBW(e) || DB.isTime(e)) {
+      const u = DB.unit(e), t = DB.isTime(e);
+      body = `<div class="stats mt"><div class="stat"><b>${rec ? rec.maxR + ' ' + u : '–'}</b><span>${t ? 'Serie más larga' : 'Más repeticiones en una serie'}</span>${rec ? `<i>${U.fmtY(rec.maxRDate)}</i>` : ''}</div>
+        <div class="stat"><b>${rec ? (t ? U.secs(rec.mostReps) : rec.mostReps + ' reps') : '–'}</b><span>Mejor sesión (total)</span>${rec ? `<i>${U.fmtY(rec.mostRepsDate)}</i>` : ''}</div>
+        ${!t && rec?.maxW > 0 ? `<div class="stat"><b>${DB.load(e, rec.maxW)}</b><span>Lastre máximo</span>${rec ? `<i>${U.fmtY(rec.maxWDate)}</i>` : ''}</div>` : ''}</div>
+        <div class="hint mt">${rec ? `${rec.sessions} ${rec.sessions === 1 ? 'sesión' : 'sesiones'} · ${t ? 'duración en segundos' : 'peso corporal'}.` : 'Aparecerá cuando registres series realizadas.'}</div>`;
     } else {
       const rm = DB.repMax(e.id);
       body = `<div class="stats mt"><div class="stat"><b>${rec ? DB.load(e, rec.maxW) : '–'}</b><span>Peso máximo</span>${rec ? `<i>${U.fmtY(rec.maxWDate)}</i>` : ''}</div><div class="stat"><b>${rec?.sessions || 0}</b><span>Sesiones · carga ${LOADS[e.load].name.toLowerCase()}</span></div></div>
@@ -1663,10 +1787,10 @@ const addRow = (it, type) => {
   if (type === 'plan' && it.log && !DB.validSets(it.log).length && it.log.length < it.plan.length) it.log.push(DB.blank(ex));
   return true;
 };
-const redrawModals = () => { ItemSheet.draw(); ExerciseDetail.draw(); TemplateEditor.draw(); };
+const redrawModals = () => { ItemSheet.draw(); ExerciseDetail.draw(); TemplateEditor.draw(); Train.draw(true); };
 const H = {
   tab: el => App.go(el.dataset.t),
-  'modal-close': () => { UI.close(); if (!UI.stack.length) App.render(); else redrawModals(); },
+  'modal-close': () => { const wasTrain = !!$('#train', UI.top()); UI.close(); if (wasTrain) Train.close(); if (!UI.stack.length) App.render(); else redrawModals(); },
 
   // Rutina
   'week-shift': el => { ui.weekOff += +el.dataset.n; ui.stripX = null; App.render(); },
@@ -1732,7 +1856,7 @@ const H = {
     if (s.f && el.dataset.t === 'plan') s.r = null;   // previsto al fallo: sin número
     Store.save(); ItemSheet.draw();
   },
-  dstog: el => { if (ItemSheet.ro() || DB.isBW(DB.ex(rowItem(el)?.exerciseId))) return; const s = rowsFor(el)?.[+el.dataset.s]; if (!s || !s.f) return; s.ds = !s.ds; Store.save(); ItemSheet.draw(); },
+  dstog: el => { if (ItemSheet.ro() || DB.noDS(DB.ex(rowItem(el)?.exerciseId))) return; const s = rowsFor(el)?.[+el.dataset.s]; if (!s || !s.f) return; s.ds = !s.ds; Store.save(); ItemSheet.draw(); },
   'row-add': el => {
     if (ItemSheet.ro()) return;
     const it = curItem(), targets = el.dataset.x === 'both' ? DB.mates(ItemSheet.list(), it) : [rowItem(el)];
@@ -1807,6 +1931,27 @@ const H = {
       Store.save(); App.render(); UI.toast('Contador restablecido');
     }, 'Restablecer');
   },
+  // sugerencia de progresión
+  'sugg-apply': el => {
+    const inTrain = !!$('#train'), date = inTrain ? ui.train.date : ui.item?.date;
+    const it = inTrain ? Train.list().find(x => x.id === el.dataset.id) : ItemSheet.byId(el.dataset.id); if (!it || !date) return;
+    const sg = DB.suggest(it, date); if (!sg?.up) return;
+    DB.applySuggest(it, sg); Store.save(); UI.toast('Sugerencia aplicada a lo previsto');
+    if ($('#train')) Train.draw(); else ItemSheet.draw();
+  },
+  // modo entreno de hoy
+  'train-open': el => Train.open(el.dataset.date),
+  'tr-done': () => Train.done(),
+  'tr-int': el => { ui.train.int = +el.dataset.v; $$('#train .tr-int button').forEach(b => b.classList.toggle('on', b === el)); },
+  'tr-skip': () => Train.go(1),
+  'tr-prev': () => Train.go(-1),
+  'tr-step': el => Train.step(el.dataset.k, +el.dataset.d),
+  'tr-f': () => { ui.train.f = !ui.train.f; Train.draw(true); },
+  'tr-rest-add': () => { if (ui.train.rest) { ui.train.rest.end += 15000; ui.train.rest.total += 15000; Train.tick(); } },
+  'tr-rest-skip': () => { ui.train.rest = null; Train.draw(); },
+  'tr-note': () => Notes.open(ui.train.date),
+  'rest-on': el => { const R = Train.cfg(); Store.data.settings.rest = { ...R, on: el.dataset.v === '1' }; Store.save(); App.render(); },
+  'rest-set': el => { const R = Train.cfg(); Store.data.settings.rest = { ...R, [el.dataset.k]: +el.value }; Store.save(); },
   // nota del día
   'note-open': el => Notes.open(el.dataset.date),
   'note-rate': el => { if (Notes.locked(ui.noteDate)) return; const v = +el.dataset.v; ui.noteR = ui.noteR === v ? 0 : v; $$('.sheet [data-act="note-rate"]').forEach(b => b.classList.toggle('on', +b.dataset.v <= ui.noteR)); },
@@ -1871,6 +2016,8 @@ const H = {
     $('#exf-m', top).innerHTML = ExerciseForm.muscles(el.value);
     $('#exf-m-lbl', top).textContent = cardio ? 'Tipo' : 'Músculo';
     $('#exf-load-wrap', top).hidden = cardio; $('#exf-cardio-hint', top).hidden = !cardio;
+    ExerciseForm.group = el.value; if (ExerciseForm.loadType === 'secs' && el.value !== 'abdominales') ExerciseForm.loadType = 'bw';
+    $('#exf-load', top).innerHTML = ExerciseForm.loadSeg(); $('#exf-load-hint', top).textContent = ExerciseForm.loadHint();
     ExerciseForm.syncName();
   },
   'exf-muscle': () => ExerciseForm.syncName(),
@@ -2191,6 +2338,170 @@ const Crop = {
   }
 };
 
+/* ===================== MODO ENTRENO DE HOY =====================
+   Recorre los ejercicios de hoy serie a serie (biseries/triseries intercaladas: 1A, 1B, 2A…).
+   Cada serie viene rellena con lo previsto: si sale igual, basta con pulsar «Hecho».
+   Temporizador opcional (Ajustes): descanso entre series y al cambiar de ejercicio;
+   en biseries no se descansa entre A y B, sino al acabar cada vuelta. */
+const Train = {
+  timer: null, lockObj: null, ac: null,
+  REST_OPTS: [30, 45, 60, 75, 90, 105, 120, 150, 180, 210, 240, 300],
+  cfg() { return { on: false, set: 90, ex: 120, ...(Store.data.settings.rest || {}) }; },
+  fmtRest(n) { return n < 60 ? `${n} s` : `${Math.floor(n / 60)}${n % 60 ? ':' + String(n % 60).padStart(2, '0') : ''} min`; },
+  settingsCard() {
+    const R = this.cfg(), opts = v => this.REST_OPTS.map(n => `<option value="${n}" ${n === v ? 'selected' : ''}>${this.fmtRest(n)}</option>`).join('');
+    return `<div class="card"><div class="row between"><h3 class="row" style="margin:0;gap:6px">${I('timer')}Temporizador de descanso</h3>
+        <div class="seg"><button class="${R.on ? '' : 'on'}" data-act="rest-on" data-v="0">No</button><button class="${R.on ? 'on' : ''}" data-act="rest-on" data-v="1">Sí</button></div></div>
+      ${R.on ? `<div class="row mt" style="gap:10px"><label class="field grow">Entre series<select data-ch="rest-set" data-k="set">${opts(R.set)}</select></label>
+        <label class="field grow">Al cambiar de ejercicio<select data-ch="rest-set" data-k="ex">${opts(R.ex)}</select></label></div>` : ''}
+      <div class="hint">Se usa en el modo «Entrenar»: al marcar una serie empieza la cuenta atrás y suena al acabar. En biseries y triseries se descansa al terminar cada vuelta.</div></div>`;
+  },
+  list() { return DB.day(ui.train.date); },
+  steps() {
+    const list = this.list(), out = [];
+    for (let i = 0; i < list.length; i++) {
+      let j = i; if (list[i].ss) while (list[j + 1]?.ss === list[i].ss) j++;
+      const g = list.slice(i, j + 1), n = Math.max(...g.map(x => x.plan.length));
+      for (let k = 0; k < n; k++) {
+        const present = g.filter(x => x.plan[k]);
+        present.forEach((x, q) => out.push({ id: x.id, s: k, unit: i, letter: g.length > 1 ? 'ABC'[g.indexOf(x)] : null, gsize: g.length, roundEnd: q === present.length - 1, n: x.plan.length }));
+      }
+      i = j;
+    }
+    return out;
+  },
+  open(date) {
+    ui.train = { date, k: 0, rest: null, f: false, key: null };
+    const st = this.steps(), first = st.findIndex(x => !DB.done(this.list().find(i => i.id === x.id)?.log?.[x.s]));
+    ui.train.k = first < 0 ? st.length : first;
+    UI.open('<div id="train"></div>', bg => { bg.querySelector('.sheet').classList.add('full'); this.draw(); });
+    this.wake(true);
+    clearInterval(this.timer); this.timer = setInterval(() => this.tick(), 250);
+  },
+  async wake(on) {
+    try {
+      if (on && 'wakeLock' in navigator && !this.lockObj) { this.lockObj = await navigator.wakeLock.request('screen'); this.lockObj.addEventListener?.('release', () => { this.lockObj = null; }); }
+      if (!on && this.lockObj) { await this.lockObj.release(); this.lockObj = null; }
+    } catch { this.lockObj = null; }
+  },
+  close() { clearInterval(this.timer); this.timer = null; this.wake(false); ui.train = null; },
+  cur() { const st = this.steps(); return { st, c: st[ui.train.k] }; },
+  // valores con los que se rellena la serie: lo apuntado o, si no, lo previsto
+  init(it, c) {
+    const p = it.plan[c.s] || {}, l = it.log?.[c.s];
+    const v = DB.done(l) ? l : p;
+    ui.train.f = !!v.f; ui.train.int = v.i || 2; ui.train.key = c.id + ':' + c.s;
+    return v;
+  },
+  field(k, label, val, ph, mode) {
+    return `<div class="tr-field"><div class="tr-lbl">${label}</div><div class="tr-ctl">
+      <button class="icon-btn tr-pm" data-act="tr-step" data-k="${k}" data-d="-1" aria-label="Menos">${I('minus')}</button>
+      <input id="tr-${k}" type="text" inputmode="${mode}" autocomplete="off" value="${val ?? ''}" placeholder="${ph ?? ''}">
+      <button class="icon-btn tr-pm" data-act="tr-step" data-k="${k}" data-d="1" aria-label="Más">${I('plus')}</button></div></div>`;
+  },
+  draw(keep) {
+    const box = $('#train'); if (!box || !ui.train) return;
+    const { st, c } = this.cur(), list = this.list(), total = st.length;
+    const head = `<div class="tr-head"><div><div class="tr-kicker">Entreno de hoy</div><div class="muted small">${U.fmtLong(ui.train.date)}</div></div>
+      <div class="row" style="gap:6px"><span class="tr-count">${Math.min(ui.train.k + (c ? 1 : 0), total)}/${total}</span><button class="icon-btn tr-x" data-act="modal-close" aria-label="Cerrar">${I('x')}</button></div></div>
+      <div class="tr-bar"><i style="width:${total ? Math.min(100, ui.train.k / total * 100) : 100}%"></i></div>`;
+    if (!c) {   // fin
+      const units = []; for (const it of list) units.push(`<div class="list-item"><span class="dot" style="background:${DB.color(it.exerciseId)}"></span><div class="grow bold">${U.esc(DB.exName(it.exerciseId))}</div>${UI.status(DB.status(it))}</div>`);
+      const note = Store.data.notes?.[ui.train.date];
+      box.innerHTML = `${head}<div class="tr-end"><div class="tr-done-ic">${I('check')}</div><h2>¡Entreno completado!</h2><div class="muted">Buen trabajo. Así ha ido respecto a lo previsto:</div></div>
+        <div class="card" style="padding:6px 16px">${units.join('')}</div>
+        ${!note && !Notes.locked(ui.train.date) ? `<button class="btn block" data-act="tr-note" style="margin-bottom:8px">${I('note')}Añadir nota del día</button>` : ''}
+        <button class="btn primary block" data-act="modal-close">Terminar</button>
+        ${total ? '<button class="btn ghost block mt" data-act="tr-prev">Volver a la última serie</button>' : ''}`;
+      return;
+    }
+    const it = list.find(x => x.id === c.id), ex = DB.ex(it.exerciseId), cardio = DB.isCardio(ex), time = DB.isTime(ex), bw = DB.isBW(ex);
+    if (ui.train.rest) return this.drawRest(box, head, st, c);
+    const p = it.plan[c.s] || {}, v = keep && ui.train.key === c.id + ':' + c.s ? this.read(ex) : this.init(it, c);
+    const nxt = st[ui.train.k + 1], nIt = nxt && list.find(x => x.id === nxt.id);
+    const last = DB.last(it.exerciseId, ui.train.date), sg = c.s === 0 ? UI.sugg(it, ui.train.date) : '';
+    const doneNow = DB.done(it.log?.[c.s]);
+    let inputs;
+    if (cardio) inputs = this.field('m', 'Minutos', v.m, p.m, 'numeric') + `<div class="tr-field"><div class="tr-lbl">Intensidad</div><div class="seg tr-int">${INTENSITY.map((n, k) => `<button class="${(v.i || 2) === k + 1 ? 'on' : ''}" data-act="tr-int" data-v="${k + 1}">${n}</button>`).join('')}</div></div>`;
+    else {
+      const wLbl = bw ? 'Lastre (+kg)' : LOADS[ex.load].col;
+      inputs = (time ? '' : this.field('w', wLbl, v.w != null ? String(v.w).replace('.', ',') : '', bw ? '0' : '', 'decimal'))
+        + this.field('r', time ? 'Segundos' : 'Repeticiones', ui.train.f && !DB.done(it.log?.[c.s]) && v.r == null ? '' : v.r, ui.train.f ? 'FALLO' : '', 'numeric')
+        + `<button class="tr-fbtn ${ui.train.f ? 'on' : ''}" data-act="tr-f">Al fallo</button>`;
+    }
+    box.innerHTML = `${head}
+      <div class="tr-ex" style="--c:${DB.color(it.exerciseId)}">
+        ${c.letter ? `<div class="tr-ss">${I('link')}${DB.ssName(c.gsize)} · <i class="ssk ${c.letter.toLowerCase()}">${c.letter}</i></div>` : ''}
+        <h2 class="tr-name">${U.esc(DB.exName(it.exerciseId))}</h2>
+        <div class="tr-sub">${cardio ? 'Bloque' : 'Serie'} <b>${c.s + 1}</b> de ${c.n}${doneNow ? ` · <span class="up">${I('check', 'sm')} hecha</span>` : ''}</div>
+      </div>
+      <div class="tr-plan"><span class="muted">Previsto</span><b>${U.esc(DB.setText(ex, cardio ? p : { ...p, r: p.f ? null : p.r }))}</b></div>
+      ${last ? `<div class="hint" style="margin:4px 2px 0">Última vez (${U.fmt(last.date)}): ${last.sets.map(x => DB.setText(ex, x)).join(' · ')}</div>` : ''}
+      ${sg}
+      <div class="tr-inputs ${cardio ? 'cardio' : ''}">${inputs}</div>
+      <button class="btn primary block tr-go" data-act="tr-done">${I('check')}${doneNow ? 'Guardar cambios' : 'Hecho'}</button>
+      <div class="row tr-nav"><button class="btn grow" data-act="tr-prev" ${ui.train.k ? '' : 'disabled'}>${I('left')}Anterior</button><button class="btn grow" data-act="tr-skip">Saltar${I('right')}</button></div>
+      <div class="tr-next">${nIt ? `Siguiente: <b>${U.esc(DB.exName(nIt.exerciseId))}</b>${nxt.letter ? ' (' + nxt.letter + ')' : ''} · ${DB.isCardio(DB.ex(nIt.exerciseId)) ? 'bloque' : 'serie'} ${nxt.s + 1}` : 'Es la última serie'}</div>`;
+  },
+  drawRest(box, head, st, c) {
+    const it = this.list().find(x => x.id === c.id);
+    box.innerHTML = `${head}<div class="tr-rest"><div class="tr-kicker">Descanso</div>
+      <div class="tr-ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" class="bg"/><circle cx="60" cy="60" r="54" class="fg" id="tr-ring" pathLength="100"/></svg><div class="tr-clock" id="tr-clock"></div></div>
+      <div class="muted">Siguiente: <b style="color:var(--text)">${U.esc(DB.exName(it.exerciseId))}</b>${c.letter ? ' (' + c.letter + ')' : ''} · serie ${c.s + 1}</div>
+      <div class="row tr-nav" style="margin-top:22px"><button class="btn grow" data-act="tr-rest-add">+15 s</button><button class="btn primary grow" data-act="tr-rest-skip">Saltar descanso</button></div></div>`;
+    this.tick();
+  },
+  tick() {
+    if (!$('#train')) { if (this.timer) this.close(); return; }
+    const R = ui.train?.rest; if (!R) return;
+    const left = (R.end - Date.now()) / 1000, clk = $('#tr-clock'), ring = $('#tr-ring');
+    if (clk) clk.textContent = U.clock(left);
+    if (ring) ring.style.strokeDashoffset = String(100 - Math.max(0, left * 1000 / R.total) * 100);
+    if (left <= 0) { ui.train.rest = null; this.alarm(); this.draw(); }
+  },
+  alarm() {
+    try { navigator.vibrate?.([250, 120, 250, 120, 400]); } catch {}
+    try {
+      const ac = this.ac; if (!ac) return; ac.resume?.();
+      [0, .32, .64].forEach((t, i) => { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = i === 2 ? 1175 : 880; o.connect(g); g.connect(ac.destination);
+        const t0 = ac.currentTime + t; g.gain.setValueAtTime(.0001, t0); g.gain.exponentialRampToValueAtTime(.35, t0 + .02); g.gain.exponentialRampToValueAtTime(.0001, t0 + .25); o.start(t0); o.stop(t0 + .27); });
+    } catch {}
+  },
+  read(ex) {
+    const n = id => { const el = $('#tr-' + id); return el ? el.value.trim() : ''; };
+    if (DB.isCardio(ex)) return { m: n('m') === '' ? null : parseInt(n('m')), i: ui.train.int || 2 };
+    return { w: DB.isTime(ex) ? null : U.num(n('w')), r: n('r') === '' ? null : parseInt(n('r')), f: !!ui.train.f };
+  },
+  step(k, d) {
+    const el = $('#tr-' + k); if (!el) return;
+    const { c } = this.cur(), ex = DB.ex(this.list().find(x => x.id === c.id)?.exerciseId);
+    const inc = k === 'w' ? (DB.STEP[ex.load] || 2.5) : k === 'r' && DB.isTime(ex) ? 5 : 1;
+    let v = (k === 'w' ? U.num(el.value) : parseInt(el.value)) ?? (k === 'w' ? U.num(el.placeholder) : parseInt(el.placeholder));
+    if (v == null || isNaN(v)) v = 0;
+    v = Math.max(0, Math.round((v + d * inc) * 100) / 100);
+    if (k === 'w' && ex.load === 'plates') v = Math.min(MAX_PLATES, Math.max(1, Math.round(v)));
+    el.value = k === 'w' ? String(v).replace('.', ',') : String(v);
+  },
+  go(d) { ui.train.rest = null; ui.train.k = Math.max(0, Math.min(this.steps().length, ui.train.k + d)); this.draw(); },
+  done() {
+    try { this.ac ||= new (window.AudioContext || window.webkitAudioContext)(); this.ac.resume?.(); } catch {}   // el sonido necesita un toque del usuario
+    const { st, c } = this.cur(); if (!c) return;
+    const it = this.list().find(x => x.id === c.id), ex = DB.ex(it.exerciseId), v = this.read(ex);
+    if (DB.isCardio(ex)) { if (!(v.m > 0)) return UI.toast('Pon los minutos'); }
+    else if (!(v.r > 0) && !v.f) return UI.toast(DB.isTime(ex) ? 'Pon los segundos' : 'Pon las repeticiones');
+    if (ex.load === 'plates' && v.w != null) v.w = Math.min(MAX_PLATES, Math.max(1, Math.round(v.w)));
+    it.log ||= []; while (it.log.length <= c.s) it.log.push(DB.blank(ex));
+    it.log[c.s] = DB.isCardio(ex) ? U.crow(v) : U.row({ ...v, ds: false });
+    Store.save();
+    const nxt = st[ui.train.k + 1], R = this.cfg(); ui.train.k++;
+    if (R.on && nxt) {
+      const secs = nxt.unit === c.unit ? (c.roundEnd ? R.set : 0) : R.ex;
+      if (secs) ui.train.rest = { end: Date.now() + secs * 1000, total: secs * 1000 };
+    }
+    this.draw();
+  }
+};
+
 /* Nota del día: valoración del entreno (1-5) y observaciones. Se puede poner en cualquier día,
    también en los pasados (es la excepción a la regla de solo lectura), para valorar después de entrenar. */
 const Notes = {
@@ -2234,7 +2545,7 @@ const Export = {
     return /[;"\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   },
   rows() {
-    const d = Store.data, out = [['Fecha', 'Día', 'Ejercicio', 'Grupo', 'Músculo', 'Tipo de carga', 'Previsto/Realizado', 'Serie', 'Peso', 'Reps', 'Fallo', 'Drop set', 'Minutos', 'Intensidad', 'Estado', 'Biserie/Triserie', 'Nota del día']];
+    const d = Store.data, out = [['Fecha', 'Día', 'Ejercicio', 'Grupo', 'Músculo', 'Tipo de carga', 'Previsto/Realizado', 'Serie', 'Peso', 'Reps', 'Segundos', 'Fallo', 'Drop set', 'Minutos', 'Intensidad', 'Estado', 'Biserie/Triserie', 'Nota del día']];
     const dates = [...new Set([...Object.keys(d.days || {}), ...Object.keys(d.notes || {})])].sort();
     for (const date of dates) {
       const items = d.days[date] || [], n = d.notes?.[date], dia = DAYS[U.dow(date)];
@@ -2246,8 +2557,8 @@ const Export = {
         const estado = st === '-' ? '−' : st || '', bis = mates.length ? DB.ssName(mates.length + 1) + ' con ' + mates.map(x => DB.exName(x.exerciseId)).join(' y ') : '';
         for (const [k, label] of [['plan', 'Previsto'], ['log', 'Realizado']]) (it[k] || []).forEach((s, i) => {
           if (k === 'log' && !DB.done(s)) return;   // series realizadas vacías no se exportan
-          const cardio = DB.isCardio(ex), noW = cardio || DB.isBW(ex);
-          out.push([...base, label, i + 1, noW ? '' : s.w, cardio ? '' : s.r, !cardio && s.f ? 'Sí' : '', !cardio && s.ds ? 'Sí' : '',
+          const cardio = DB.isCardio(ex), time = DB.isTime(ex), noW = cardio || time;
+          out.push([...base, label, i + 1, noW ? '' : s.w, cardio || time ? '' : s.r, time ? s.r : '', !cardio && s.f ? 'Sí' : '', !cardio && s.ds ? 'Sí' : '',
             cardio ? s.m : '', cardio && s.i ? INTENSITY[s.i - 1] : '', estado, bis, note]);
         });
       }

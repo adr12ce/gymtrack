@@ -456,7 +456,9 @@ main .chips::-webkit-scrollbar{display:none}
 .tr-plan{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:2px 4px}
 .tr-plan b{font-size:16px;text-align:right}
 .tr-inputs{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
-.tr-inputs .tr-fbtn{grid-column:1 / -1}
+.tr-inputs .tr-fs{grid-column:1 / -1;display:flex;gap:10px}
+.tr-fs .tr-fbtn{flex:1}
+.tr-fbtn.ds.on{background:#9333ea}
 .tr-inputs.cardio{grid-template-columns:1fr}
 .tr-field{background:var(--card);border-radius:18px;padding:10px 8px 8px;box-shadow:var(--shadow)}
 .tr-lbl{font-size:11.5px;font-weight:700;color:var(--muted);text-align:center;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
@@ -484,6 +486,29 @@ main .chips::-webkit-scrollbar{display:none}
 .tr-end h2{margin:10px 0 4px;font-size:28px}
 .tr-done-ic{width:64px;height:64px;border-radius:50%;background:var(--ok-soft);color:var(--ok);display:grid;place-items:center;margin:0 auto}
 .tr-done-ic .ic{width:32px;height:32px;stroke-width:2.6}
+/* perfil desplegable */
+.prof{padding:6px 18px 14px}
+.prof-sum{display:flex;align-items:center;gap:12px;width:100%;border:none;background:none;font:inherit;color:var(--text);text-align:left;padding:10px 0;cursor:pointer}
+.prof-k{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.prof-sum b{font-size:16px}
+.prof-chev{color:var(--muted);transition:transform .2s}.prof-chev .ic{vertical-align:0}
+.prof.open .prof-chev{transform:rotate(90deg)}
+.prof-body{border-top:1px solid var(--line);padding-top:12px;margin-top:4px}
+.prof-body .avatar.lg{display:none}
+.prof-foot{justify-content:space-between;margin-top:10px}
+.prof-foot .del-account{margin-left:0}
+.avatar.md{width:44px;height:44px;font-size:18px;cursor:pointer}
+/* pie de ajustes */
+.foot-ver{text-align:center;font-size:11px;color:var(--muted)}
+.users-count{font-size:10.5px !important;margin-top:2px !important}
+/* añadir ejercicio: grupos */
+.pick-groups{display:flex;flex-direction:column}
+.pick-g{display:flex;align-items:center;gap:10px;border:none;background:none;font:inherit;font-size:15px;font-weight:650;color:var(--text);padding:13px 4px;border-bottom:1px solid var(--line);cursor:pointer;text-align:left}
+.pick-g:last-child{border-bottom:none}
+.pick-g .ic{color:var(--muted)}.pick-g .ic.filled{color:var(--accent)}
+.pick-g.empty{opacity:.5}
+.pick-back{margin:2px 0 6px}
+.sessions{font-size:12px;color:var(--muted);margin:8px 2px 4px}
 /* nota */
 .note-chip{background:var(--card-2);border-radius:12px;padding:9px 11px}
 .note-chip b{display:flex;align-items:center;gap:5px}
@@ -1203,7 +1228,7 @@ const UI = {
   exSub(e) {
     const rec = DB.records(e.id);
     if (DB.isCardio(e)) return `${U.esc(e.muscle)}${rec ? ` · Total ${U.dur(rec.mins)}` : ''}`;
-    return `${U.esc(e.muscle)}${e.load !== 'kg' ? ' · ' + LOADS[e.load].name : ''}${rec ? (DB.isBW(e) || DB.isTime(e) ? ` · Máx ${rec.maxR} ${DB.unit(e)}` : ` · Máx ${DB.load(e, rec.maxW)}`) : ''}`;
+    return `${U.esc(e.muscle)}${e.load !== 'kg' ? ' · ' + LOADS[e.load].name : ''}`;
   },
   // campo de carga según el tipo del ejercicio (placas = desplegable 1–50)
   loadField(ex, val, attrs, ph) {
@@ -1559,14 +1584,17 @@ Views.ajustes = {
     const t = Store.data.settings.theme, tpls = Store.data.templates, n = Gym.current(), pr = Cloud.profile || {};
     const acc = Store.data.settings.accent || 'rojo', sc = Look.scale();
     return `<h2>Ajustes</h2>
-      <div class="card"><div class="profile-head">${UI.avatar('lg')}<div class="grow"><h3 style="margin:0">@${U.esc(pr.username || '')}</h3>
-        <div class="muted small" style="margin-top:3px">${U.esc(pr.email || '')}</div><div class="muted small">Alta el ${U.fmtY(Store.data.account.createdAt)}</div></div></div>
-        <div class="row wrap mt"><button class="btn sm" data-act="avatar-pick">${pr.avatar ? 'Cambiar foto' : 'Añadir foto'}</button>${pr.avatar ? '<button class="btn sm ghost" data-act="avatar-del">Quitar foto</button>' : ''}<button class="btn sm" data-act="user-change">Cambiar nombre de usuario</button></div>
-        <div class="row wrap mt"><button class="btn sm" data-act="pw-change">Cambiar contraseña</button><button class="btn sm" data-act="export-csv">Exportar datos (CSV)</button><button class="btn sm ghost danger" data-act="logout">Cerrar sesión</button><button class="btn sm del-account" data-act="account-del">Borrar mi cuenta</button></div>
+      <div class="card prof ${ui.profOpen ? 'open' : ''}">
+        <button class="prof-sum" data-act="prof-toggle" aria-expanded="${!!ui.profOpen}">${UI.avatar('md')}<div class="grow"><div class="prof-k">Perfil</div><b>@${U.esc(pr.username || '')}</b></div><span class="prof-chev">${I('right')}</span></button>
+        ${ui.profOpen ? `<div class="prof-body">
+          <div class="profile-head">${UI.avatar('lg')}<div class="grow"><div class="muted small">${U.esc(pr.email || '')}</div><div class="muted small">Alta el ${U.fmtY(Store.data.account.createdAt)}</div></div></div>
+          <div class="row wrap mt"><button class="btn sm" data-act="avatar-pick">${pr.avatar ? 'Cambiar foto' : 'Añadir foto'}</button>${pr.avatar ? '<button class="btn sm ghost" data-act="avatar-del">Quitar foto</button>' : ''}<button class="btn sm" data-act="user-change">Cambiar nombre de usuario</button></div>
+          <div class="row wrap mt"><button class="btn sm" data-act="pw-change">Cambiar contraseña</button><button class="btn sm" data-act="export-csv">Exportar datos (CSV)</button></div></div>` : ''}
+        <div class="row prof-foot"><button class="btn sm ghost danger" data-act="logout">Cerrar sesión</button><button class="btn sm del-account" data-act="account-del">Borrar mi cuenta</button></div>
         <input type="file" id="avatar-file" accept="image/*" hidden data-ch="avatar-file"></div>
       <div class="card"><h3>Días de gym por semana</h3>
         <div class="seg goal-seg">${[1, 2, 3, 4, 5, 6, 7].map(k => `<button class="${k === n ? 'on' : ''}" data-act="goal" data-v="${k}">${k}</button>`).join('')}</div>
-        <div class="hint">Con ${n} ${n === 1 ? 'día' : 'días'} tienes ${7 - n} ${7 - n === 1 ? 'descanso' : 'descansos'} a la semana. Si lo cambias, vale desde esta semana; las anteriores mantienen su objetivo.</div></div>
+        <div class="hint">Con ${n} ${n === 1 ? 'día' : 'días'} de gym tienes ${7 - n} ${7 - n === 1 ? 'día' : 'días'} de descanso.</div></div>
       ${Train.settingsCard()}
       <div class="card"><div class="row between"><h3 style="margin:0">Rutinas prefabricadas</h3><button class="btn sm primary" data-act="tpl-new">+ Nueva</button></div>
         <div class="mt">${tpls.length ? tpls.map(tp => {
@@ -1583,7 +1611,7 @@ Views.ajustes = {
         <button class="btn sm" data-act="scale" data-n="-1" ${sc <= SCALES[0] ? 'disabled' : ''} aria-label="Más pequeño">A−</button><b>${Math.round(sc * 100)} %</b>
         <button class="btn sm" data-act="scale" data-n="1" ${sc >= SCALES[SCALES.length - 1] ? 'disabled' : ''} aria-label="Más grande">A+</button></div></div>
 </div></div>
-      <div class="muted small" style="text-align:center">GymTrack v${APP_VERSION} · por adr12ce</div>
+      <div class="foot-ver">GymTrack v${APP_VERSION} · por adr12ce</div>
       <div class="users-count" id="users-count">${Cloud.users != null ? Cloud.users + ' usuarios registrados' : ''}</div>`;
   },
   mount() {
@@ -1594,20 +1622,28 @@ Views.ajustes = {
 /* ===================== 9. MODALES ===================== */
 const Picker = {
   open(cb) {
-    ui.pick = { cb, q: '', g: 'Todos' };
+    ui.pick = { cb, q: '', g: null };
     UI.open(`${UI.head('Añadir ejercicio')}<input type="search" class="ex-search" placeholder="Buscar ejercicio…" data-in="pick-q" autocomplete="off">
-      <div class="chips mt" id="pick-chips"></div><div id="pick-list"></div>
+      <div id="pick-list"></div>
       <button class="btn ghost block mt" data-act="ex-new-from-pick">+ Crear ejercicio nuevo</button>`, () => this.list());
   },
   list() {
     const box = UI.top(); if (!box) return;
-    $('#pick-chips', box).innerHTML = UI.groupChips(ui.pick.g, 'pick-g', true);
-    const items = UI.filterEx(ui.pick.g, ui.pick.q);
-    $('#pick-list', box).innerHTML = items.length ? items.map(e => `<div class="list-item clickable" data-act="pick" data-id="${U.esc(e.id)}">
+    // sin buscar: primero se elige el grupo muscular y después el ejercicio
+    if (!ui.pick.q && !ui.pick.g) {
+      const ex = Store.data.exercises, favs = ex.filter(e => e.pinned).length;
+      const rows = [...(favs ? [{ id: 'fav', name: 'Favoritos', fav: true, n: favs }] : []), ...GROUPS.map(g => ({ ...g, n: ex.filter(e => e.group === g.id).length }))];
+      $('#pick-list', box).innerHTML = ex.length ? `<div class="pick-groups">${rows.map(g => `<button class="pick-g ${g.n ? '' : 'empty'}" data-act="pick-g" data-g="${g.id}">
+          ${g.fav ? I('heart', 'filled sm') : `<span class="dot" style="background:${g.color}"></span>`}<span class="grow">${g.name}</span><span class="muted small">${g.n}</span>${I('right')}</button>`).join('')}</div>`
+        : '<div class="empty">Aún no tienes ejercicios: créalo aquí abajo</div>';
+      return;
+    }
+    const items = UI.filterEx(ui.pick.q ? 'Todos' : ui.pick.g, ui.pick.q), gName = ui.pick.g === 'fav' ? 'Favoritos' : DB.group(ui.pick.g).name;
+    $('#pick-list', box).innerHTML = (ui.pick.q ? '' : `<button class="btn sm ghost pick-back" data-act="pick-back">${I('left')}${gName}</button>`) + (items.length ? items.map(e => `<div class="list-item clickable" data-act="pick" data-id="${U.esc(e.id)}">
       <span class="dot" style="background:${DB.group(e.group).color}"></span>
       <div class="grow"><div class="bold">${e.pinned ? I('heart', 'filled sm') : ''}${U.esc(e.name)}</div><div class="muted small">${U.esc(e.muscle)}${!DB.isCardio(e) && e.load !== 'kg' ? ' · ' + LOADS[e.load].name : ''}${e.rating ? ' · ' + '★'.repeat(e.rating) : ''}</div></div>
       <span style="color:var(--accent);font-size:22px;font-weight:800">+</span></div>`).join('')
-      : `<div class="empty">${Store.data.exercises.length ? 'Sin resultados' : 'Aún no tienes ejercicios: créalo aquí abajo'}</div>`;
+      : `<div class="empty">${Store.data.exercises.length ? (ui.pick.q ? 'Sin resultados' : 'No tienes ejercicios de este grupo') : 'Aún no tienes ejercicios: créalo aquí abajo'}</div>`);
   }
 };
 
@@ -1640,9 +1676,8 @@ const ItemSheet = {
       ${!isTpl && !ro ? UI.sugg(it, r.date) : ''}
       <div class="card sec-plan"><div class="sec-title"><h3>Previsto</h3></div>${UI.setsTable(ex, it.plan, 'plan', null, ro)}</div>`;
     if (!isTpl) {
-      const last = DB.last(it.exerciseId, r.date), st = DB.status(it);
+      const st = DB.status(it);
       h += `<div class="card sec-done"><div class="sec-title"><h3>Realizado</h3><div class="row">${UI.status(st)}${ro ? '' : '<button class="btn sm" data-act="copy-plan">Igual que lo previsto</button>'}</div></div>
-        <div class="hint" style="margin-top:0">${last ? `Última vez (${U.fmt(last.date)}): ${last.sets.map(s => DB.setText(ex, s)).join(' · ')}` : 'Primera vez con este ejercicio'}</div>
         ${UI.setsTable(ex, it.log, 'log', it.plan, ro)}</div>`;
     }
     h += ro ? '<div class="hint" style="text-align:center">Este día ya ha pasado: puedes verlo, pero no modificarlo.</div>'
@@ -1659,9 +1694,7 @@ const ItemSheet = {
       <div class="card ss-whos" data-sort-ss="1" style="padding:8px 12px">${group.map(who).join('')}</div>
       <div class="card sec-plan"><div class="sec-title"><h3>Previsto</h3></div>${UI.ssTable(group, 'plan', ro)}</div>`;
     if (!isTpl) {
-      const last = group.map((g, j) => { const l = DB.last(g.exerciseId, r.date), ex = DB.ex(g.exerciseId); return l ? `<div>${L[j]} · última vez (${U.fmt(l.date)}): ${l.sets.map(s => DB.setText(ex, s)).join(' · ')}</div>` : ''; }).join('');
       h += `<div class="card sec-done"><div class="sec-title"><h3>Realizado</h3>${ro ? '' : '<button class="btn sm" data-act="copy-plan" data-x="both">Igual que lo previsto</button>'}</div>
-        <div class="hint" style="margin-top:0">${last || 'Primera vez con estos ejercicios'}</div>
         ${UI.ssTable(group, 'log', ro)}</div>`;
     }
     const todos = n === 3 ? 'los tres' : 'los dos';
@@ -1756,11 +1789,9 @@ const ExerciseDetail = {
         ${!t && rec?.maxW > 0 ? `<div class="stat"><b>${DB.load(e, rec.maxW)}</b><span>Lastre máximo</span>${rec ? `<i>${U.fmtY(rec.maxWDate)}</i>` : ''}</div>` : ''}</div>
         <div class="hint mt">${rec ? `${rec.sessions} ${rec.sessions === 1 ? 'sesión' : 'sesiones'} · ${t ? 'duración en segundos' : 'peso corporal'}.` : 'Aparecerá cuando registres series realizadas.'}</div>`;
     } else {
-      const rm = DB.repMax(e.id);
-      body = `<div class="stats mt"><div class="stat"><b>${rec ? DB.load(e, rec.maxW) : '–'}</b><span>Peso máximo</span>${rec ? `<i>${U.fmtY(rec.maxWDate)}</i>` : ''}</div><div class="stat"><b>${rec?.sessions || 0}</b><span>Sesiones · carga ${LOADS[e.load].name.toLowerCase()}</span></div></div>
-        <div class="card mt"><h3>Peso máximo según repeticiones</h3>${rm.length ? `<table class="rm"><thead><tr><th>Reps</th><th>Peso máx</th><th class="r">Fecha</th></tr></thead><tbody>
-          ${rm.map(x => `<tr><td>${x.r}${x.f ? ` <span class="tag" style="--c:var(--bad)">${x.ds ? 'FALLO + DS' : 'FALLO'}</span>` : ''}</td><td class="w">${DB.load(e, x.w)}</td><td class="muted r">${U.fmtY(x.date)}</td></tr>`).join('')}</tbody></table>`
-          : '<div class="empty">Aparecerá cuando registres series realizadas</div>'}</div>`;
+      body = `<div class="stats mt"><div class="stat"><b>${rec ? DB.load(e, rec.maxW) : '–'}</b><span>Mejor peso</span>${rec ? `<i>${U.fmtY(rec.maxWDate)}</i>` : ''}</div>
+        <div class="stat"><b>${rec ? DB.load(e, rec.top.w || 0) + ' × ' + DB.reps(rec.top) : '–'}</b><span>Mejor serie</span>${rec ? `<i>${U.fmtY(rec.bestDate)}</i>` : ''}</div></div>
+        <div class="sessions">${rec ? `${rec.sessions} ${rec.sessions === 1 ? 'sesión' : 'sesiones'} · carga ${LOADS[e.load].name.toLowerCase()}` : 'Aparecerá cuando registres series realizadas'}</div>`;
     }
     box.innerHTML = `${UI.head(U.esc(e.name))}
       <div class="row between wrap" style="margin-top:-6px">${UI.tag(e)}<div class="row" style="gap:2px">${UI.fav(e)}${UI.stars(e.id, e.rating)}</div></div>
@@ -1946,7 +1977,8 @@ const H = {
   'tr-skip': () => Train.go(1),
   'tr-prev': () => Train.go(-1),
   'tr-step': el => Train.step(el.dataset.k, +el.dataset.d),
-  'tr-f': () => { ui.train.f = !ui.train.f; Train.draw(true); },
+  'tr-f': () => { ui.train.f = !ui.train.f; if (!ui.train.f) ui.train.ds = false; Train.draw(true); },
+  'tr-ds': () => { ui.train.ds = !ui.train.ds; Train.draw(true); },
   'tr-rest-add': () => { if (ui.train.rest) { ui.train.rest.end += 15000; ui.train.rest.total += 15000; Train.tick(); } },
   'tr-rest-skip': () => { ui.train.rest = null; Train.draw(); },
   'tr-note': () => Notes.open(ui.train.date),
@@ -1954,6 +1986,7 @@ const H = {
   'rest-set': el => { const R = Train.cfg(); Store.data.settings.rest = { ...R, [el.dataset.k]: +el.value }; Store.save(); },
   // nota del día
   'note-open': el => Notes.open(el.dataset.date),
+  'prof-toggle': () => { ui.profOpen = !ui.profOpen; App.render(); },
   'note-rate': el => { if (Notes.locked(ui.noteDate)) return; const v = +el.dataset.v; ui.noteR = ui.noteR === v ? 0 : v; $$('.sheet [data-act="note-rate"]').forEach(b => b.classList.toggle('on', +b.dataset.v <= ui.noteR)); },
   'note-save': () => Notes.save(),
   'note-del': () => Notes.remove(),
@@ -2025,6 +2058,7 @@ const H = {
   'exf-save': () => ExerciseForm.save(),
   'pick-q': el => { ui.pick.q = el.value; Picker.list(); },
   'pick-g': el => { ui.pick.g = el.dataset.g; Picker.list(); },
+  'pick-back': () => { ui.pick.g = null; Picker.list(); },
   pick: el => ui.pick.cb(el.dataset.id),
   'ex-new-from-pick': () => { const cb = ui.pick.cb; ExerciseForm.open(null, id => cb(id)); },
 
@@ -2347,14 +2381,14 @@ const Train = {
   timer: null, lockObj: null, ac: null,
   REST_OPTS: [30, 45, 60, 75, 90, 105, 120, 150, 180, 210, 240, 300],
   cfg() { return { on: false, set: 90, ex: 120, ...(Store.data.settings.rest || {}) }; },
-  fmtRest(n) { return n < 60 ? `${n} s` : `${Math.floor(n / 60)}${n % 60 ? ':' + String(n % 60).padStart(2, '0') : ''} min`; },
+  fmtRest(n) { const m = Math.floor(n / 60), x = n % 60; return [m ? m + ' min' : '', x ? x + ' seg' : ''].filter(Boolean).join(' '); },
   settingsCard() {
     const R = this.cfg(), opts = v => this.REST_OPTS.map(n => `<option value="${n}" ${n === v ? 'selected' : ''}>${this.fmtRest(n)}</option>`).join('');
     return `<div class="card"><div class="row between"><h3 class="row" style="margin:0;gap:6px">${I('timer')}Temporizador de descanso</h3>
         <div class="seg"><button class="${R.on ? '' : 'on'}" data-act="rest-on" data-v="0">No</button><button class="${R.on ? 'on' : ''}" data-act="rest-on" data-v="1">Sí</button></div></div>
       ${R.on ? `<div class="row mt" style="gap:10px"><label class="field grow">Entre series<select data-ch="rest-set" data-k="set">${opts(R.set)}</select></label>
         <label class="field grow">Al cambiar de ejercicio<select data-ch="rest-set" data-k="ex">${opts(R.ex)}</select></label></div>` : ''}
-      <div class="hint">Se usa en el modo «Entrenar»: al marcar una serie empieza la cuenta atrás y suena al acabar. En biseries y triseries se descansa al terminar cada vuelta.</div></div>`;
+      <div class="hint">Solo disponible en el modo Entrenar.</div></div>`;
   },
   list() { return DB.day(ui.train.date); },
   steps() {
@@ -2390,7 +2424,7 @@ const Train = {
   init(it, c) {
     const p = it.plan[c.s] || {}, l = it.log?.[c.s];
     const v = DB.done(l) ? l : p;
-    ui.train.f = !!v.f; ui.train.int = v.i || 2; ui.train.key = c.id + ':' + c.s;
+    ui.train.f = !!v.f; ui.train.ds = !!(v.f && v.ds); ui.train.int = v.i || 2; ui.train.key = c.id + ':' + c.s;
     return v;
   },
   field(k, label, val, ph, mode) {
@@ -2419,7 +2453,7 @@ const Train = {
     if (ui.train.rest) return this.drawRest(box, head, st, c);
     const p = it.plan[c.s] || {}, v = keep && ui.train.key === c.id + ':' + c.s ? this.read(ex) : this.init(it, c);
     const nxt = st[ui.train.k + 1], nIt = nxt && list.find(x => x.id === nxt.id);
-    const last = DB.last(it.exerciseId, ui.train.date), sg = c.s === 0 ? UI.sugg(it, ui.train.date) : '';
+    const sg = c.s === 0 ? UI.sugg(it, ui.train.date) : '';
     const doneNow = DB.done(it.log?.[c.s]);
     let inputs;
     if (cardio) inputs = this.field('m', 'Minutos', v.m, p.m, 'numeric') + `<div class="tr-field"><div class="tr-lbl">Intensidad</div><div class="seg tr-int">${INTENSITY.map((n, k) => `<button class="${(v.i || 2) === k + 1 ? 'on' : ''}" data-act="tr-int" data-v="${k + 1}">${n}</button>`).join('')}</div></div>`;
@@ -2427,7 +2461,7 @@ const Train = {
       const wLbl = bw ? 'Lastre (+kg)' : LOADS[ex.load].col;
       inputs = (time ? '' : this.field('w', wLbl, v.w != null ? String(v.w).replace('.', ',') : '', bw ? '0' : '', 'decimal'))
         + this.field('r', time ? 'Segundos' : 'Repeticiones', ui.train.f && !DB.done(it.log?.[c.s]) && v.r == null ? '' : v.r, ui.train.f ? 'FALLO' : '', 'numeric')
-        + `<button class="tr-fbtn ${ui.train.f ? 'on' : ''}" data-act="tr-f">Al fallo</button>`;
+        + `<div class="tr-fs"><button class="tr-fbtn ${ui.train.f ? 'on' : ''}" data-act="tr-f">Al fallo</button>${ui.train.f && !DB.noDS(ex) ? `<button class="tr-fbtn ds ${ui.train.ds ? 'on' : ''}" data-act="tr-ds">Drop set</button>` : ''}</div>`;
     }
     box.innerHTML = `${head}
       <div class="tr-ex" style="--c:${DB.color(it.exerciseId)}">
@@ -2436,7 +2470,6 @@ const Train = {
         <div class="tr-sub">${cardio ? 'Bloque' : 'Serie'} <b>${c.s + 1}</b> de ${c.n}${doneNow ? ` · <span class="up">${I('check', 'sm')} hecha</span>` : ''}</div>
       </div>
       <div class="tr-plan"><span class="muted">Previsto</span><b>${U.esc(DB.setText(ex, cardio ? p : { ...p, r: p.f ? null : p.r }))}</b></div>
-      ${last ? `<div class="hint" style="margin:4px 2px 0">Última vez (${U.fmt(last.date)}): ${last.sets.map(x => DB.setText(ex, x)).join(' · ')}</div>` : ''}
       ${sg}
       <div class="tr-inputs ${cardio ? 'cardio' : ''}">${inputs}</div>
       <button class="btn primary block tr-go" data-act="tr-done">${I('check')}${doneNow ? 'Guardar cambios' : 'Hecho'}</button>
@@ -2470,12 +2503,12 @@ const Train = {
   read(ex) {
     const n = id => { const el = $('#tr-' + id); return el ? el.value.trim() : ''; };
     if (DB.isCardio(ex)) return { m: n('m') === '' ? null : parseInt(n('m')), i: ui.train.int || 2 };
-    return { w: DB.isTime(ex) ? null : U.num(n('w')), r: n('r') === '' ? null : parseInt(n('r')), f: !!ui.train.f };
+    return { w: DB.isTime(ex) ? null : U.num(n('w')), r: n('r') === '' ? null : parseInt(n('r')), f: !!ui.train.f, ds: !!(ui.train.f && ui.train.ds && !DB.noDS(ex)) };
   },
   step(k, d) {
     const el = $('#tr-' + k); if (!el) return;
     const { c } = this.cur(), ex = DB.ex(this.list().find(x => x.id === c.id)?.exerciseId);
-    const inc = k === 'w' ? (DB.STEP[ex.load] || 2.5) : k === 'r' && DB.isTime(ex) ? 5 : 1;
+    const inc = k === 'w' ? (ex.load === 'plates' ? 1 : 0.25) : k === 'r' && DB.isTime(ex) ? 5 : 1;
     let v = (k === 'w' ? U.num(el.value) : parseInt(el.value)) ?? (k === 'w' ? U.num(el.placeholder) : parseInt(el.placeholder));
     if (v == null || isNaN(v)) v = 0;
     v = Math.max(0, Math.round((v + d * inc) * 100) / 100);
@@ -2491,7 +2524,7 @@ const Train = {
     else if (!(v.r > 0) && !v.f) return UI.toast(DB.isTime(ex) ? 'Pon los segundos' : 'Pon las repeticiones');
     if (ex.load === 'plates' && v.w != null) v.w = Math.min(MAX_PLATES, Math.max(1, Math.round(v.w)));
     it.log ||= []; while (it.log.length <= c.s) it.log.push(DB.blank(ex));
-    it.log[c.s] = DB.isCardio(ex) ? U.crow(v) : U.row({ ...v, ds: false });
+    it.log[c.s] = DB.isCardio(ex) ? U.crow(v) : U.row(v);
     Store.save();
     const nxt = st[ui.train.k + 1], R = this.cfg(); ui.train.k++;
     if (R.on && nxt) {

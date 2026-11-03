@@ -576,6 +576,7 @@ main .chips::-webkit-scrollbar{display:none}
 'use strict';
 /* ===================== 1. CONFIG ===================== */
 const APP_VERSION = '6.0.0';
+const VERSION_LABEL = v => v.split('.').slice(0, 2).join('.');   // se muestra solo mayor.menor: v6.0
 const SCHEMA_VERSION = 8;          // súbelo cuando cambie la estructura de datos y añade su migración
 const STORAGE_KEY = 'gymtrack.data';
 const PENDING_KEY = 'gymtrack.pending.';   // + id de usuario: hay cambios guardados en el dispositivo sin subir a la nube
@@ -1616,7 +1617,7 @@ Views.ajustes = {
         <button class="btn sm" data-act="scale" data-n="-1" ${sc <= SCALES[0] ? 'disabled' : ''} aria-label="Más pequeño">A−</button><b>${Math.round(sc * 100)} %</b>
         <button class="btn sm" data-act="scale" data-n="1" ${sc >= SCALES[SCALES.length - 1] ? 'disabled' : ''} aria-label="Más grande">A+</button></div></div>
 </div></div>
-      <div class="foot-ver">GymTrack v${APP_VERSION} · por adr12ce</div>
+      <div class="foot-ver">GymTrack v${VERSION_LABEL(APP_VERSION)} · por adr12ce</div>
       <div class="users-count" id="users-count">${Cloud.users != null ? Cloud.users + ' usuarios registrados' : ''}</div>`;
   },
   mount() {
@@ -2662,7 +2663,7 @@ const Updater = {
   show(v) {
     if ($('#update-bar')) return;
     const b = document.createElement('div'); b.id = 'update-bar'; b.className = 'update-bar';
-    b.innerHTML = `<span>Hay una versión nueva <b>v${U.esc(v)}</b></span><button class="btn sm primary" data-act="app-update">Actualizar</button><button class="icon-btn" data-act="update-later" aria-label="Más tarde">${I('x')}</button>`;
+    b.innerHTML = `<span>Hay una versión nueva <b>v${U.esc(VERSION_LABEL(v))}</b></span><button class="btn sm primary" data-act="app-update">Actualizar</button><button class="icon-btn" data-act="update-later" aria-label="Más tarde">${I('x')}</button>`;
     document.body.appendChild(b);
   },
   async apply() {
@@ -2717,7 +2718,7 @@ const Auth = {
       ${tabs ? `<div class="auth-tabs"><button type="button" class="${m === 'login' ? 'on' : ''}" data-act="auth-mode" data-m="login">Entrar</button><button type="button" class="${m === 'signup' ? 'on' : ''}" data-act="auth-mode" data-m="signup">Crear cuenta</button></div>` : ''}
       ${note?.ok ? `<div class="form-ok" style="margin:0 0 12px">${U.esc(note.ok)}</div>` : ''}
       ${note?.err ? `<div class="form-err" style="margin:0 0 12px">${U.esc(note.err)}</div>` : ''}
-      ${form}<div class="muted small" style="text-align:center;margin-top:14px">GymTrack v${APP_VERSION} · por adr12ce</div></div>`;
+      ${form}<div class="muted small" style="text-align:center;margin-top:14px">GymTrack v${VERSION_LABEL(APP_VERSION)} · por adr12ce</div></div>`;
   },
   msg(f, text, ok) { const b = $('.auth-msg', f); b.className = 'auth-msg ' + (ok ? 'form-ok' : 'form-err'); b.textContent = text; b.hidden = false; },
   busy(f, on) { const b = $('button[type=submit]', f); if (!b) return; b.disabled = on; b.textContent = on ? 'Un momento…' : b.dataset.label; },

@@ -56,3 +56,29 @@ self.addEventListener('fetch', e => {
     })
   );
 });
+
+// Aviso de fin de descanso (lo envía el servidor). Si la app está a la vista en Android, ya vibra ella misma;
+// en el resto de casos (pantalla apagada, otra app, iPhone) se muestra la notificación, que suena y vibra.
+self.addEventListener('push', e => {
+  let d = {}; try { d = e.data ? e.data.json() : {}; } catch {}
+  e.waitUntil((async () => {
+    const list = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const visible = list.some(c => c.visibilityState === 'visible');
+    const apple = /iPhone|iPad|iPod|Macintosh/.test(self.navigator.userAgent) && !/Chrome|Android/.test(self.navigator.userAgent);
+    if (visible && !apple) return;
+    await self.registration.showNotification(d.title || 'Descanso terminado', {
+      body: d.body || '¡A por la siguiente serie!', tag: 'gymtrack-rest', renotify: true,
+      icon: './icon-192-v2.png', badge: './icon-192-v2.png', vibrate: [300, 150, 300, 150, 500]
+    });
+  })());
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil((async () => {
+    const list = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const c = list.find(x => 'focus' in x);
+    if (c) return c.focus();
+    return self.clients.openWindow('./');
+  })());
+});

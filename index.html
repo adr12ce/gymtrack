@@ -888,6 +888,12 @@ const Cloud = {
     Object.assign(this.profile, fields);
     try { localStorage.setItem(PROFILE_KEY + this.user.id, JSON.stringify(this.profile)); } catch {}
   },
+  // última conexión (interna, solo la ve el administrador en Supabase)
+  touch() {
+    if (!this.user || Date.now() - (this.seenAt || 0) < 300000) return;
+    this.seenAt = Date.now();
+    this.sb.rpc('touch_last_seen').then(() => {}, () => {});
+  },
   async userCount() {
     const { data, error } = await this.sb.rpc('user_count'); if (error) throw error; return data;
   },
@@ -1560,7 +1566,7 @@ Views.progreso = {
         ${resetRow('score', rs.score)}</div>
       <div class="card"><div class="row between" style="margin-bottom:10px"><h3 style="margin:0">Duración total en cardio</h3><span class="tag" style="--c:var(--cardio)">${U.dur(cWeek)} esta semana</span></div>
         <div class="big cardio">${U.dur(cAll)}</div>${resetRow('cardio', rs.cardio)}</div>
-      <div class="card"><h3>Rendimiento · últimas ${WEEKS_SHOWN} semanas</h3>${Perf.explain(p)}<canvas class="chart" id="idx-chart"></canvas>
+      <div class="card"><h3>Rendimiento · últimas ${WEEKS_SHOWN} semanas</h3><canvas class="chart" id="idx-chart"></canvas>
         <div class="hint">Basado en el peso y las repeticiones de tus series.</div></div>
       <div class="card"><h3>Volumen semanal (kg)</h3><canvas class="chart" id="vol-chart"></canvas>
         <div class="hint">Suma de kg × repeticiones de todas tus series de la semana.</div></div>
@@ -2002,10 +2008,10 @@ const H = {
   'tr-step': el => Train.step(el.dataset.k, +el.dataset.d),
   'tr-f': () => { ui.train.f = !ui.train.f; if (!ui.train.f) ui.train.ds = false; Train.draw(true); },
   'tr-ds': () => { ui.train.ds = !ui.train.ds; Train.draw(true); },
-  'tr-rest-add': () => { if (ui.train.rest) { ui.train.rest.end += 15000; ui.train.rest.total += 15000; Train.tick(); } },
-  'tr-rest-skip': () => { ui.train.rest = null; Train.draw(); },
+  'tr-rest-add': () => { if (ui.train.rest) { ui.train.rest.end += 15000; ui.train.rest.total += 15000; Train.save(); Train.syncRest(); Train.tick(); } },
+  'tr-rest-skip': () => { ui.train.rest = null; Train.save(); Train.syncRest(); Train.draw(); },
   'tr-note': () => Notes.open(ui.train.date),
-  'rest-on': el => { const R = Train.cfg(); Store.data.settings.rest = { ...R, on: el.dataset.v === '1' }; Store.save(); App.render(); },
+  'rest-on': el => { const R = Train.cfg(), on = el.dataset.v === '1'; Store.data.settings.rest = { ...R, on }; Store.save(); App.render(); if (on) Push.ensure(true, true); },
   'rest-set': el => { const R = Train.cfg(); Store.data.settings.rest = { ...R, [el.dataset.k]: +el.value }; Store.save(); },
   // nota del día
   'note-open': el => Notes.open(el.dataset.date),
@@ -2405,6 +2411,33 @@ const Crop = {
   }
 };
 
+/* Notificaciones push: el aviso de fin de descanso llega aunque la pantalla esté apagada.
+   El servidor (Supabase: pg_cron + función rest-push) lo envía cuando termina el descanso. */
+const VAPID_PUBLIC = 'BOirbuuWqePckoY20hxOE1MUTTPen-GVUW1B0xRqG4C-xmLzEqvoNxiIDFbuveKAQQzm7V5hXXuoYNUShkwMG1o';
+const Push = {
+  supported() { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && /^https?:$/.test(location.protocol); },
+  key() { const b = atob(VAPID_PUBLIC.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - VAPID_PUBLIC.length % 4) % 4)); return Uint8Array.from(b, c => c.charCodeAt(0)); },
+  // ask = se puede pedir permiso (solo tras un toque del usuario); tell = avisar si no es posible
+  async ensure(ask, tell) {
+    if (!Train.cfg().on || !Cloud.user) return;
+    if (!this.supported()) { if (tell) UI.toast(/iPhone|iPad/.test(navigator.userAgent) ? 'Para avisos con la pantalla apagada, añade la app a la pantalla de inicio' : 'Este navegador no permite avisos con la pantalla apagada'); return; }
+    let p = Notification.permission;
+    if (p === 'default' && ask) { try { p = await Notification.requestPermission(); } catch {} }
+    if (p !== 'granted') { if (tell && p === 'denied') UI.toast('Permite las notificaciones de GymTrack para que avise con la pantalla apagada'); return; }
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: this.key() });
+      const j = sub.toJSON(); this.endpoint = j.endpoint;
+      await Cloud.sb.from('push_subs').upsert({ endpoint: j.endpoint, user_id: Cloud.user.id, sub: j });
+    } catch {}
+  },
+  async forget() {   // al cerrar sesión este dispositivo deja de recibir los avisos de esa cuenta
+    try { if (this.endpoint) await Cloud.sb.from('push_subs').delete().eq('endpoint', this.endpoint); } catch {}
+    this.endpoint = null;
+  }
+};
+
 /* ===================== MODO ENTRENO DE HOY =====================
    Recorre los ejercicios de hoy serie a serie (biseries/triseries intercaladas: 1A, 1B, 2A…).
    Cada serie viene rellena con lo previsto: si sale igual, basta con pulsar «Hecho».
@@ -2437,13 +2470,25 @@ const Train = {
     }
     return out;
   },
+  // el estado (serie actual y descanso en marcha) se guarda en el dispositivo: si sales y vuelves, sigue igual
+  KEY: 'gymtrack.train.',
+  save() { try { if (Cloud.user && ui.train) localStorage.setItem(this.KEY + Cloud.user.id, JSON.stringify({ date: ui.train.date, k: ui.train.k, rest: ui.train.rest })); } catch {} },
+  boot() {
+    try { const t = JSON.parse(localStorage.getItem(this.KEY + Cloud.user.id) || 'null'); ui.train = t && t.date === U.today() ? { f: false, key: null, ...t } : null; } catch { ui.train = null; }
+    clearInterval(this.timer); this.timer = setInterval(() => this.tick(), 250);
+    this.tick();
+  },
   open(date) {
-    ui.train = { date, k: 0, rest: null, f: false, key: null };
-    const st = this.steps(), first = st.findIndex(x => !DB.done(this.list().find(i => i.id === x.id)?.log?.[x.s]));
-    ui.train.k = first < 0 ? st.length : first;
+    Push.ensure(true);
+    if (!ui.train || ui.train.date !== date) {
+      ui.train = { date, k: 0, rest: null, f: false, key: null };
+      const st = this.steps(), first = st.findIndex(x => !DB.done(this.list().find(i => i.id === x.id)?.log?.[x.s]));
+      ui.train.k = first < 0 ? st.length : first;
+    }
+    ui.train.k = Math.min(ui.train.k, this.steps().length); ui.train.key = null;
+    this.save();
     UI.open('<div id="train"></div>', bg => { bg.querySelector('.sheet').classList.add('full'); this.draw(); });
     this.wake(true);
-    clearInterval(this.timer); this.timer = setInterval(() => this.tick(), 250);
   },
   async wake(on) {
     try {
@@ -2451,7 +2496,7 @@ const Train = {
       if (!on && this.lockObj) { await this.lockObj.release(); this.lockObj = null; }
     } catch { this.lockObj = null; }
   },
-  close() { clearInterval(this.timer); this.timer = null; this.wake(false); ui.train = null; },
+  close() { this.wake(false); this.save(); },   // el descanso sigue contando aunque salgas
   cur() { const st = this.steps(); return { st, c: st[ui.train.k] }; },
   // valores con los que se rellena la serie: lo apuntado o, si no, lo previsto
   init(it, c) {
@@ -2518,15 +2563,37 @@ const Train = {
     this.tick();
   },
   tick() {
-    if (!$('#train')) { if (this.timer) this.close(); return; }
     const R = ui.train?.rest; if (!R) return;
     const left = (R.end - Date.now()) / 1000, clk = $('#tr-clock'), ring = $('#tr-ring');
     if (clk) clk.textContent = U.clock(left);
     if (ring) ring.style.strokeDashoffset = String(100 - Math.max(0, left * 1000 / R.total) * 100);
-    if (left <= 0) { ui.train.rest = null; this.alarm(); this.draw(); }
+    if (left <= 0) { ui.train.rest = null; this.save(); if (left > -30 && document.visibilityState === 'visible') this.alarm(); if ($('#train')) this.draw(); }
+  },
+  // vibración: en Android con la Vibration API; en iPhone (iOS 18+) con el «toque» háptico de un interruptor
+  haptic() {
+    try {
+      if (!this.hl) { this.hl = document.createElement('label'); this.hl.setAttribute('aria-hidden', 'true'); this.hl.style.cssText = 'position:fixed;left:-99px;top:0;width:1px;height:1px;opacity:0;overflow:hidden'; this.hl.innerHTML = '<input type="checkbox" switch tabindex="-1">'; document.body.appendChild(this.hl); }
+      this.hl.click();
+    } catch {}
+  },
+  buzz(end) {
+    try { navigator.vibrate?.(end ? [300, 150, 300, 150, 500] : 200); } catch {}
+    this.haptic(); if (end) { setTimeout(() => this.haptic(), 250); setTimeout(() => this.haptic(), 500); }
+  },
+  // descanso en el servidor: así llega el aviso aunque la pantalla esté apagada
+  async syncRest() {
+    if (!Cloud.user || !Cloud.sb) return;
+    const R = ui.train?.rest;
+    try {
+      if (R) {
+        const { c } = this.cur(), it = c && this.list().find(x => x.id === c.id);
+        const label = it ? `${DB.exName(it.exerciseId)}${c.letter ? ' (' + c.letter + ')' : ''} · serie ${c.s + 1}` : null;
+        await Cloud.sb.from('rest_timers').upsert({ user_id: Cloud.user.id, end_at: new Date(R.end).toISOString(), label: label?.slice(0, 190), sent: false });
+      } else await Cloud.sb.from('rest_timers').delete().eq('user_id', Cloud.user.id);
+    } catch {}
   },
   alarm() {
-    try { navigator.vibrate?.([250, 120, 250, 120, 400]); } catch {}
+    this.buzz(true);
     try {
       const ac = this.ac; if (!ac) return; ac.resume?.();
       [0, .32, .64].forEach((t, i) => { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = i === 2 ? 1175 : 880; o.connect(g); g.connect(ac.destination);
@@ -2548,7 +2615,7 @@ const Train = {
     if (k === 'w' && ex.load === 'plates') v = Math.min(MAX_PLATES, Math.max(1, Math.round(v)));
     el.value = k === 'w' ? String(v).replace('.', ',') : String(v);
   },
-  go(d) { ui.train.rest = null; ui.train.k = Math.max(0, Math.min(this.steps().length, ui.train.k + d)); this.draw(); },
+  go(d) { const had = !!ui.train.rest; ui.train.rest = null; ui.train.k = Math.max(0, Math.min(this.steps().length, ui.train.k + d)); this.save(); if (had) this.syncRest(); this.draw(); },
   done() {
     try { this.ac ||= new (window.AudioContext || window.webkitAudioContext)(); this.ac.resume?.(); } catch {}   // el sonido necesita un toque del usuario
     const { st, c } = this.cur(); if (!c) return;
@@ -2562,9 +2629,9 @@ const Train = {
     const nxt = st[ui.train.k + 1], R = this.cfg(); ui.train.k++;
     if (R.on && nxt) {
       const secs = nxt.unit === c.unit ? (c.roundEnd ? R.set : 0) : R.ex;
-      if (secs) ui.train.rest = { end: Date.now() + secs * 1000, total: secs * 1000 };
+      if (secs) { ui.train.rest = { end: Date.now() + secs * 1000, total: secs * 1000 }; this.buzz(false); this.syncRest(); }
     }
-    this.draw();
+    this.save(); this.draw();
   }
 };
 
@@ -2794,10 +2861,11 @@ const App = {
     try { const t = sessionStorage.getItem('gymtrack.tab'); ui.tab = t && Views[t] ? t : 'rutina'; } catch { ui.tab = 'rutina'; }
     ui.weekOff = 0; ui.stripX = null;
     this.applyTheme(); this.render();
-    Updater.check();
+    Updater.check(); Cloud.seenAt = 0; Cloud.touch(); Train.boot(); Push.ensure(false);
   },
   async logout() {
     if (Cloud.dirty || Cloud.saving) await Cloud.flush();
+    await Push.forget(); clearInterval(Train.timer); ui.train = null;
     if (Cloud.dirty && !confirm('Hay cambios que aún no se han subido (sin conexión). En este dispositivo no se pierden, pero no estarán en otros hasta que vuelvas a entrar aquí. ¿Cerrar sesión igualmente?')) return;
     if (!Cloud.dirty && !confirm('¿Cerrar sesión?')) return;
     clearTimeout(Cloud.timer);
@@ -2839,7 +2907,7 @@ const App = {
       if (ev === 'PASSWORD_RECOVERY') { Auth.recovering = true; Auth.show('recover'); }
       if (ev === 'SIGNED_OUT' && Cloud.user) { Cloud.user = null; Store.data = null; Auth.show(); }   // sesión caducada o cerrada en otro sitio
     });
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { Cloud.refresh(); Updater.check(); } else Cloud.flush(); });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { Cloud.refresh(); Updater.check(); Cloud.touch(); Train.tick(); } else Cloud.flush(); });
     setInterval(() => { if (document.visibilityState === 'visible') Cloud.refresh(); }, 60000);          // cambios de otros dispositivos
     setInterval(() => { if (document.visibilityState === 'visible') Updater.check(); }, 30 * 60000);    // versión nueva publicada
     addEventListener('online', () => { if (Cloud.user) { Cloud.setStatus('saving'); Cloud.refresh(); } });

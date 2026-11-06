@@ -6,7 +6,7 @@
    - Los datos (Supabase) y version.json nunca pasan por aquí: siempre van a la red.
    Al publicar una versión nueva, cambia VERSION (y también APP_VERSION en index.html y version.json).
    ========================================================= */
-const VERSION = '6.0.0';
+const VERSION = '6.2.0';
 const CACHE = 'gymtrack-' + VERSION + '-b2';   // cambia la parte final para forzar que se renueve la copia guardada
 const CORE = [
   './', './index.html', './manifest.webmanifest',

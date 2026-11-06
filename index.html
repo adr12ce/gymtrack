@@ -17,7 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* =========================================================
-   GymTrack · v6.0.0 · por adr12ce
+   GymTrack · v6.2.0 · por adr12ce
    1. Estilos  2. Script: Config · Utils · Store/Migraciones · Consultas
    · Nube (Supabase) · Contador de días · UI · Gráficas · Vistas · Modales · Acceso · Acciones · App
    ========================================================= */
@@ -62,7 +62,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 10px}
 .mt{margin-top:10px}.mt2{margin-top:16px}
 .btn{appearance:none;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-size:14px;font-weight:700;padding:9px 14px;border-radius:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;justify-content:center;white-space:nowrap}
 .btn:active{transform:scale(.98)}
-.btn.primary{background:linear-gradient(135deg,var(--accent-2),var(--accent));border-color:transparent;color:#fff;box-shadow:0 4px 14px color-mix(in srgb,var(--accent) 35%,transparent)}
+.btn.primary{background:linear-gradient(135deg,var(--accent-2),var(--accent));border-color:transparent;color:var(--on-accent,#fff);box-shadow:0 4px 14px color-mix(in srgb,var(--accent) 35%,transparent)}
 .btn.soft{background:var(--accent-soft);border-color:transparent;color:var(--accent-text)}
 .btn.ghost{background:transparent}
 .btn.danger{color:var(--danger)}
@@ -243,7 +243,7 @@ body.auth{padding-bottom:24px}
 .setup code{background:var(--card-2);padding:1px 5px;border-radius:5px;font-size:13px}
 /* perfil, colores y tamaño */
 #top-sub{display:flex;align-items:center;gap:8px}
-.avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;flex:none;display:grid;place-items:center;font-weight:800;font-size:15px;color:#fff;background:linear-gradient(135deg,var(--accent-2),var(--accent));border:2px solid var(--card);box-shadow:0 0 0 1px var(--line);cursor:pointer;overflow:hidden;padding:0}
+.avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;flex:none;display:grid;place-items:center;font-weight:800;font-size:15px;color:var(--on-accent,#fff);background:linear-gradient(135deg,var(--accent-2),var(--accent));border:2px solid var(--card);box-shadow:0 0 0 1px var(--line);cursor:pointer;overflow:hidden;padding:0}
 .avatar img{width:100%;height:100%;object-fit:cover;display:block}
 .avatar.lg{width:64px;height:64px;font-size:26px;cursor:default}
 .profile-head{display:flex;align-items:center;gap:14px}
@@ -270,7 +270,7 @@ body.auth{padding-bottom:24px}
 .ss-label{font-size:11px;font-weight:800;color:var(--accent-text);text-transform:uppercase;letter-spacing:.05em;padding:0 2px}
 .ss-group.lifted{position:relative;z-index:3;box-shadow:0 10px 28px rgba(0,0,0,.22);transform:scale(1.03);background:var(--card)}
 .ssk{font-style:normal;display:inline-grid;place-items:center;min-width:18px;height:18px;border-radius:5px;font-size:11px;font-weight:800;color:#fff;margin-left:3px;vertical-align:1px}
-.ssk.a{background:var(--accent)}.ssk.b{background:#6366f1}
+.ssk.a{background:var(--accent);color:var(--on-accent,#fff)}.ssk.b{background:#6366f1}
 .ss-who{display:flex;align-items:center;gap:8px;padding:4px 0}
 .ss-who .ssk{margin:0}
 .ss-who b{flex:1;min-width:0}
@@ -397,7 +397,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid color-mix(in srgb,var(
 .daystrip i{width:5px;height:5px;border-radius:50%;background:transparent}
 .daystrip .has i{background:var(--muted)}
 .daystrip .gym i{background:var(--ok)}.daystrip .miss i{background:var(--bad)}.daystrip .excused i{background:var(--exc)}
-.daystrip .is-today b{background:var(--accent);color:#fff}
+.daystrip .is-today b{background:var(--accent);color:var(--on-accent,#fff)}
 .daystrip .is-today span{color:var(--accent-text)}
 .daystrip button:active{background:var(--card-2)}
 /* el día de hoy destaca: más ancho y con letra mayor; el resto algo más compacto */
@@ -443,6 +443,7 @@ main .chips::-webkit-scrollbar{display:none}
 .tr-head{display:flex;align-items:center;justify-content:space-between}
 .tr-kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-text)}
 .tr-count{font-weight:750;font-size:14px;color:var(--muted)}
+.tr-reset{padding:6px 10px;font-size:12.5px}.tr-reset .ic{width:14px;height:14px}
 .tr-x{background:var(--card-2);border-radius:50%;width:34px;height:34px;padding:0}
 .tr-bar{height:6px;border-radius:4px;background:var(--card-2);overflow:hidden}
 .tr-bar i{display:block;height:100%;background:var(--accent);border-radius:4px;transition:width .3s}
@@ -575,7 +576,7 @@ main .chips::-webkit-scrollbar{display:none}
 <script>
 'use strict';
 /* ===================== 1. CONFIG ===================== */
-const APP_VERSION = '6.0.0';
+const APP_VERSION = '6.2.0';
 const VERSION_LABEL = v => v.split('.').slice(0, 2).join('.');   // se muestra solo mayor.menor: v6.0
 const SCHEMA_VERSION = 8;          // súbelo cuando cambie la estructura de datos y añade su migración
 const STORAGE_KEY = 'gymtrack.data';
@@ -626,9 +627,13 @@ const ACCENTS = [
   { id: 'turquesa', name: 'Turquesa', l: ['#0891b2', '#22d3ee', '#cffafe', '#0e7490'], d: ['#06b6d4', '#67e8f9', '#082f3a', '#22d3ee'] },
   { id: 'azul',     name: 'Azul',     l: ['#2563eb', '#60a5fa', '#dbeafe', '#1d4ed8'], d: ['#3b82f6', '#93c5fd', '#14213f', '#60a5fa'] },
   { id: 'morado',   name: 'Morado',   l: ['#7c3aed', '#a78bfa', '#ede9fe', '#6d28d9'], d: ['#8b5cf6', '#c4b5fd', '#25173f', '#a78bfa'] },
-  { id: 'rosa',     name: 'Rosa',     l: ['#db2777', '#f472b6', '#fce7f3', '#be185d'], d: ['#ec4899', '#f9a8d4', '#3b0f25', '#f472b6'] }
+  { id: 'rosa',     name: 'Rosa',     l: ['#db2777', '#f472b6', '#fce7f3', '#be185d'], d: ['#ec4899', '#f9a8d4', '#3b0f25', '#f472b6'] },
+  { id: 'lima',     name: 'Lima',     l: ['#65a30d', '#a3e635', '#ecfccb', '#4d7c0f'], d: ['#84cc16', '#bef264', '#1f2e0a', '#a3e635'] },
+  { id: 'indigo',   name: 'Índigo',   l: ['#4f46e5', '#818cf8', '#e0e7ff', '#4338ca'], d: ['#6366f1', '#a5b4fc', '#1c1b3f', '#818cf8'] },
+  // monocromo: negro en el tema claro y blanco en el oscuro (el texto sobre el acento se invierte)
+  { id: 'mono',     name: 'Blanco y negro', l: ['#16171d', '#3b3d47', '#e9e9ee', '#16171d', '#ffffff'], d: ['#f2f2f5', '#c9cad2', '#2a2b31', '#f2f2f5', '#111216'] }
 ];
-const SCALES = [0.8, 0.9, 1, 1.1, 1.2, 1.3];   // tamaño de toda la vista (se guarda por dispositivo)
+const SCALES = Array.from({ length: 13 }, (_, i) => Math.round((0.7 + i * 0.05) * 100) / 100);   // 70 % … 130 %, de 5 en 5 (se guarda por dispositivo)
 const SCALE_KEY = 'gymtrack.scale';
 const WEEKS_SHOWN = 12;
 
@@ -960,7 +965,7 @@ const DB = {
       const w = t === 'secs' ? 0 : s.w || 0, r = s.r || 0, e1 = bw ? r + w / 100 : U.epley(w, r || 1);   // peso corporal y segundos: mandan las reps (el lastre desempata)
       maxW = Math.max(maxW, w); maxR = Math.max(maxR, r); reps += r;
       if (!top || e1 > best) { best = e1; top = s; }
-      if (t !== 'plates' && !bw) vol += w * mult * r;   // placas y peso corporal no son kg: no cuentan para el volumen
+      if (!bw) vol += (t === 'plates' ? w * 5 : w * mult) * r;   // cada placa cuenta como 5 kg; el peso corporal no suma
     }
     return { maxW, best, vol, maxR, top, n: v.length, reps };
   },
@@ -1569,7 +1574,7 @@ Views.progreso = {
       <div class="card"><h3>Rendimiento · últimas ${WEEKS_SHOWN} semanas</h3><canvas class="chart" id="idx-chart"></canvas>
         <div class="hint">Basado en el peso y las repeticiones de tus series.</div></div>
       <div class="card"><h3>Volumen semanal (kg)</h3><canvas class="chart" id="vol-chart"></canvas>
-        <div class="hint">Suma de kg × repeticiones de todas tus series de la semana.</div></div>
+        <div class="hint">Suma de kg × repeticiones de todas tus series de la semana (cada placa cuenta como 5 kg).</div></div>
       <h3 class="mt2">Récords de favoritos</h3>
       ${favs.length ? favs.map(e => { const r = DB.records(e.id); return `<div class="card">
         <div class="row between"><div class="grow clickable" data-act="ex-detail" data-id="${U.esc(e.id)}"><div class="bold" style="font-size:16px">${U.esc(e.name)}</div><div style="margin-top:5px">${UI.tag(e)}</div></div>${UI.fav(e)}</div>
@@ -1617,7 +1622,7 @@ Views.ajustes = {
       <div class="card"><h3>Aspecto del sistema</h3>
         <h4 style="margin:0 0 10px;font-size:14px;font-weight:700">Tema</h4><div class="seg">
         ${[['auto', 'Auto'], ['light', 'Claro'], ['dark', 'Oscuro']].map(([v, l]) => `<button class="${t === v ? 'on' : ''}" data-act="theme" data-v="${v}">${l}</button>`).join('')}</div>
-        <div class="subsec"><h4>Color</h4><div class="swatches">${ACCENTS.map(a => `<button class="swatch ${a.id === acc ? 'on' : ''}" style="background:linear-gradient(135deg,${a.l[1]},${a.l[0]})" data-act="accent" data-v="${a.id}" title="${a.name}" aria-label="${a.name}">${a.id === acc ? I('check') : ''}</button>`).join('')}</div>
+        <div class="subsec"><h4>Color</h4><div class="swatches">${ACCENTS.map(a => `<button class="swatch ${a.id === acc ? 'on' : ''}" style="background:${a.id === 'mono' ? 'linear-gradient(135deg,#16171d 50%,#f2f2f5 50%)' : `linear-gradient(135deg,${a.l[1]},${a.l[0]})`}" data-act="accent" data-v="${a.id}" title="${a.name}" aria-label="${a.name}">${a.id === acc ? I('check') : ''}</button>`).join('')}</div>
 </div>
         <div class="subsec"><div class="row between"><h4 style="margin:0">Tamaño de pantalla</h4><div class="scale-row">
         <button class="btn sm" data-act="scale" data-n="-1" ${sc <= SCALES[0] ? 'disabled' : ''} aria-label="Más pequeño">A−</button><b>${Math.round(sc * 100)} %</b>
@@ -2002,6 +2007,7 @@ const H = {
   // modo entreno de hoy
   'train-open': el => Train.open(el.dataset.date),
   'tr-done': () => Train.done(),
+  'tr-reset': () => UI.ask('Reiniciar entreno', 'Se borrará todo lo que has apuntado hoy y volverás a la primera serie.<br><br>¿Reiniciar el entreno?', () => Train.reset()),
   'tr-int': el => { ui.train.int = +el.dataset.v; $$('#train .tr-int button').forEach(b => b.classList.toggle('on', b === el)); },
   'tr-skip': () => Train.go(1),
   'tr-prev': () => Train.go(-1),
@@ -2129,7 +2135,7 @@ const H = {
   },
   accent: el => { Store.data.settings.accent = el.dataset.v; Store.save(); Look.apply(); App.render(); },
   scale: el => {
-    const i = SCALES.indexOf(Look.scale()), j = Math.min(SCALES.length - 1, Math.max(0, (i < 0 ? 2 : i) + +el.dataset.n));
+    const i = SCALES.indexOf(Look.scale()), j = Math.min(SCALES.length - 1, Math.max(0, (i < 0 ? SCALES.indexOf(1) : i) + +el.dataset.n));
     try { localStorage.setItem(SCALE_KEY, SCALES[j]); } catch {}
     Look.apply(); App.render();
   },
@@ -2255,7 +2261,7 @@ const Look = {
     // color de acento
     const a = ACCENTS.find(x => x.id === Store.data?.settings.accent) || ACCENTS[0];
     let st = $('#accent-style'); if (!st) { st = document.createElement('style'); st.id = 'accent-style'; document.head.appendChild(st); }
-    const vars = c => `--accent:${c[0]};--accent-2:${c[1]};--accent-soft:${c[2]};--accent-text:${c[3]};--glow-1:${c[2]};`;
+    const vars = c => `--accent:${c[0]};--accent-2:${c[1]};--accent-soft:${c[2]};--accent-text:${c[3]};--on-accent:${c[4] || '#fff'};--glow-1:${c[2]};`;
     st.textContent = a.id === 'rojo' ? '' : `:root{${vars(a.l)}}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){${vars(a.d)}}}:root[data-theme="dark"]{${vars(a.d)}}`;
     $('meta[name="theme-color"]')?.setAttribute('content', a.l[0]);
     requestAnimationFrame(() => Chart.redrawAll());
@@ -2444,7 +2450,7 @@ const Push = {
    Temporizador opcional (Ajustes): descanso entre series y al cambiar de ejercicio;
    en biseries no se descansa entre A y B, sino al acabar cada vuelta. */
 const Train = {
-  timer: null, lockObj: null, ac: null,
+  timer: null, lockObj: null,
   REST_OPTS: [30, 45, 60, 75, 90, 105, 120, 150, 180, 210, 240, 300],
   cfg() { return { on: false, set: 90, ex: 120, ...(Store.data.settings.rest || {}) }; },
   fmtRest(n) { const m = Math.floor(n / 60), x = n % 60; return [m ? m + ' min' : '', x ? x + ' seg' : ''].filter(Boolean).join(' '); },
@@ -2457,6 +2463,13 @@ const Train = {
       <div class="hint">Solo disponible en el modo Entrenar.</div></div>`;
   },
   list() { return DB.day(ui.train.date); },
+  started() { return this.list().some(it => DB.validSets(it.log).length); },
+  // vuelve a empezar: borra lo apuntado hoy y regresa a la primera serie
+  reset() {
+    for (const it of this.list()) { const ex = DB.ex(it.exerciseId); it.log = it.plan.map(() => DB.blank(ex)); delete it.sg; }
+    const had = !!ui.train.rest; ui.train.rest = null; ui.train.k = 0; ui.train.key = null;
+    Store.save(); this.save(); if (had) this.syncRest(); this.draw(); UI.toast('Entreno reiniciado');
+  },
   steps() {
     const list = this.list(), out = [];
     for (let i = 0; i < list.length; i++) {
@@ -2515,7 +2528,7 @@ const Train = {
     const box = $('#train'); if (!box || !ui.train) return;
     const { st, c } = this.cur(), list = this.list(), total = st.length;
     const head = `<div class="tr-head"><div><div class="tr-kicker">Entreno de hoy</div><div class="muted small">${U.fmtLong(ui.train.date)}</div></div>
-      <div class="row" style="gap:6px"><span class="tr-count">${Math.min(ui.train.k + (c ? 1 : 0), total)}/${total}</span><button class="icon-btn tr-x" data-act="modal-close" aria-label="Cerrar">${I('x')}</button></div></div>
+      <div class="row" style="gap:6px">${this.started() ? `<button class="btn sm ghost tr-reset" data-act="tr-reset">${I('reset')}Reiniciar</button>` : ''}<span class="tr-count">${Math.min(ui.train.k + (c ? 1 : 0), total)}/${total}</span><button class="icon-btn tr-x" data-act="modal-close" aria-label="Cerrar">${I('x')}</button></div></div>
       <div class="tr-bar"><i style="width:${total ? Math.min(100, ui.train.k / total * 100) : 100}%"></i></div>`;
     if (!c) {   // fin
       const units = []; for (const it of list) units.push(`<div class="list-item"><span class="dot" style="background:${DB.color(it.exerciseId)}"></span><div class="grow bold">${U.esc(DB.exName(it.exerciseId))}</div>${UI.status(DB.status(it))}</div>`);
@@ -2592,14 +2605,7 @@ const Train = {
       } else await Cloud.sb.from('rest_timers').delete().eq('user_id', Cloud.user.id);
     } catch {}
   },
-  alarm() {
-    this.buzz(true);
-    try {
-      const ac = this.ac; if (!ac) return; ac.resume?.();
-      [0, .32, .64].forEach((t, i) => { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = i === 2 ? 1175 : 880; o.connect(g); g.connect(ac.destination);
-        const t0 = ac.currentTime + t; g.gain.setValueAtTime(.0001, t0); g.gain.exponentialRampToValueAtTime(.35, t0 + .02); g.gain.exponentialRampToValueAtTime(.0001, t0 + .25); o.start(t0); o.stop(t0 + .27); });
-    } catch {}
-  },
+  alarm() { this.buzz(true); },   // solo vibración, sin sonido
   read(ex) {
     const n = id => { const el = $('#tr-' + id); return el ? el.value.trim() : ''; };
     if (DB.isCardio(ex)) return { m: n('m') === '' ? null : parseInt(n('m')), i: ui.train.int || 2 };
@@ -2617,7 +2623,6 @@ const Train = {
   },
   go(d) { const had = !!ui.train.rest; ui.train.rest = null; ui.train.k = Math.max(0, Math.min(this.steps().length, ui.train.k + d)); this.save(); if (had) this.syncRest(); this.draw(); },
   done() {
-    try { this.ac ||= new (window.AudioContext || window.webkitAudioContext)(); this.ac.resume?.(); } catch {}   // el sonido necesita un toque del usuario
     const { st, c } = this.cur(); if (!c) return;
     const it = this.list().find(x => x.id === c.id), ex = DB.ex(it.exerciseId), v = this.read(ex);
     if (DB.isCardio(ex)) { if (!(v.m > 0)) return UI.toast('Pon los minutos'); }
@@ -2629,8 +2634,9 @@ const Train = {
     const nxt = st[ui.train.k + 1], R = this.cfg(); ui.train.k++;
     if (R.on && nxt) {
       const secs = nxt.unit === c.unit ? (c.roundEnd ? R.set : 0) : R.ex;
-      if (secs) { ui.train.rest = { end: Date.now() + secs * 1000, total: secs * 1000 }; this.buzz(false); this.syncRest(); }
+      if (secs) { ui.train.rest = { end: Date.now() + secs * 1000, total: secs * 1000 }; this.syncRest(); }
     }
+    this.buzz(false);   // vibra al marcar «Hecho»
     this.save(); this.draw();
   }
 };

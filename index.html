@@ -944,7 +944,7 @@ const DB = {
     return t === 'side' ? `${U.kg(w)} - ${U.kg(w)}` : t === 'plates' ? `${w} pl` : `${U.kg(w)} kg`;
   },
   reps: s => { const f = s.f ? (s.ds ? 'fallo + DS' : 'fallo') : ''; return s.r != null ? (f ? `${s.r} (${f})` : `${s.r}`) : (f ? f.toUpperCase() : '?'); },
-  planReps: s => s.f ? (s.ds ? 'FALLO + DS' : 'FALLO') : (s.r ?? '?'),   // en lo previsto el fallo no lleva número
+  planReps: s => s.f ? (s.r != null ? `${s.r} (${s.ds ? 'fallo + DS' : 'fallo'})` : (s.ds ? 'FALLO + DS' : 'FALLO')) : (s.r ?? '?'),   // el fallo previsto puede llevar número (si se copió de lo hecho)
   setText(ex, s) {
     if (this.noDS(ex) && s.ds) s = { ...s, ds: false };
     if (this.isCardio(ex)) return `${s.m ?? '?'} min${s.i ? ' ' + INTENSITY[s.i - 1].toLowerCase() : ''}`;
@@ -975,6 +975,18 @@ const DB = {
       const st = this.stats(it.log, ex); if (st) out.push({ date, sets: this.validSets(it.log), ...st });
     }
     return out;
+  },
+  /* Lo que hiciste exactamente la última vez (antes de 'before'): las series realizadas, en su orden.
+     Si en alguna dejaste el peso en blanco (usaste el que venía previsto), se toma el previsto de ese día. */
+  lastSets(exId, before) {
+    const ex = this.ex(exId); if (!ex) return null;
+    for (const date of Object.keys(this.d.days).sort().reverse()) {
+      if (date >= before) continue;
+      const it = this.d.days[date].find(i => i.exerciseId === exId && this.validSets(i.log).length); if (!it) continue;
+      return it.log.map((l, i) => [l, it.plan?.[i] || {}]).filter(([l]) => this.done(l)).slice(0, LIMITS.sets)
+        .map(([l, p]) => this.isCardio(ex) ? U.crow({ m: l.m, i: l.i ?? p.i }) : U.row({ w: this.isTime(ex) ? null : l.w ?? p.w, r: l.r, f: l.f, ds: l.f && l.ds && !this.noDS(ex) }));
+    }
+    return null;
   },
   last(exId, before) { const h = this.history(exId).filter(x => x.date < before); return h[h.length - 1] || null; },
   records(exId) {
@@ -1009,7 +1021,7 @@ const DB = {
     if (this.isCardio(ex)) return plan.map(s => this.setText(ex, s)).join(' · ');
     const u = this.unit(ex), same = plan.every(s => (this.isTime(ex) || s.w === plan[0].w) && (s.f || s.r === plan[0].r) && s.f === plan[0].f && !!s.ds === !!plan[0].ds), n = plan.length, p = plan[0];
     if (same) {
-      const reps = p.f ? (p.ds ? 'Al fallo + DS' : 'Al fallo') : p.r != null ? `${p.r} ${u}` : `? ${u}`, w = this.wText(ex, p.w);
+      const reps = p.f ? (p.r != null ? `${p.r} ${u} al fallo${p.ds ? ' + DS' : ''}` : p.ds ? 'Al fallo + DS' : 'Al fallo') : p.r != null ? `${p.r} ${u}` : `? ${u}`, w = this.wText(ex, p.w);
       return `${reps} × ${n} ${n === 1 ? 'serie' : 'series'}${w ? ' · ' + w : ''}`;
     }
     return plan.map(s => { const w = this.wText(ex, s.w); return (w ? w + ' × ' : '') + this.planReps(s) + (s.f ? '' : this.isTime(ex) ? ' s' : w ? '' : ' reps'); }).join(' · ');
@@ -1262,7 +1274,7 @@ const UI = {
     const load = o.loadCol === false ? '' : DB.isTime(ex) ? '<td class="na">—</td>' : `<td>${this.loadField(ex, s.w, a + ' data-k="w"' + dis, ro ? '–' : ph?.w ?? (DB.isBW(ex) ? '+0' : null))}</td>`;
     return `<tr class="${o.cls || ''}">
       ${o.lead ?? `<td class="n">${o.label || i + 1}</td>`}${load}
-      <td class="r">${plan && s.f
+      <td class="r">${plan && s.f && s.r == null
         ? `<input type="text" class="fallo" value="" placeholder="${ds ? 'FALLO+DS' : 'FALLO'}" readonly tabindex="-1" aria-label="Al fallo">`
         : `<input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" class="${s.f ? 'fallo' : ''}" value="${s.r ?? ''}" placeholder="${ro && !s.f ? '–' : (s.f ? (ds ? 'FALLO+DS' : 'FALLO') : rPh)}" ${a} data-k="r"${dis}>${s.f && s.r != null ? `<span class="fallo-tag">${ds ? 'FALLO+DS' : 'FALLO'}</span>` : ''}`}</td>
       <td class="f"><div class="fcell"><button class="ftog ${s.f ? 'on' : ''}" data-act="ftog" data-t="${type}" data-s="${i}"${x} title="Al fallo" aria-pressed="${s.f}"${dis}>F</button>${s.f && !bw ? `<button class="ftog ds ${s.ds ? 'on' : ''}" data-act="dstog" data-t="${type}" data-s="${i}"${x} title="Drop set" aria-pressed="${!!s.ds}"${dis}>DS</button>` : ''}</div></td>
@@ -1880,7 +1892,7 @@ const H = {
     const date = el.dataset.date; if (isPast(date)) return;
     if (DB.day(date).length >= LIMITS.perDay) return UI.toast(`Máximo ${LIMITS.perDay} ejercicios por día`);
     Picker.open(exId => {
-      const ex = DB.ex(exId), plan = DB.newPlan(ex), it = { id: U.uid(), exerciseId: exId, plan, log: plan.map(() => DB.blank(ex)) };
+      const ex = DB.ex(exId), plan = DB.lastSets(exId, date) || DB.newPlan(ex), it = { id: U.uid(), exerciseId: exId, plan, log: plan.map(() => DB.blank(ex)) };   // por defecto, lo de la última vez
       (Store.data.days[date] ||= []).push(it); Store.save();
       UI.close(); App.render(); ItemSheet.open({ kind: 'day', date, id: it.id });
     });
@@ -1936,8 +1948,8 @@ const H = {
     const items = el.dataset.x === 'both' ? DB.mates(ItemSheet.list(), it) : [it];
     let n = 0;
     for (const x of items) {
-      const last = DB.last(x.exerciseId, date); if (!last) continue;
-      const ex = DB.ex(x.exerciseId); x.plan = last.sets.slice(0, LIMITS.sets).map(s => DB.copyRow(ex, s)); n++;
+      const sets = DB.lastSets(x.exerciseId, date); if (!sets) continue;
+      const ex = DB.ex(x.exerciseId); x.plan = sets; n++;
       if (x.log && !DB.validSets(x.log).length) x.log = x.plan.map(() => DB.blank(ex));   // lo realizado acompaña en nº de series
     }
     if (!n) return;
@@ -2053,7 +2065,7 @@ const H = {
     const d = +el.dataset.d;
     if (DB.tpl(ui.tplId).days[d].length >= LIMITS.perDay) return UI.toast(`Máximo ${LIMITS.perDay} ejercicios por día`);
     Picker.open(exId => {
-      const it = { id: U.uid(), exerciseId: exId, plan: DB.newPlan(DB.ex(exId)) };
+      const it = { id: U.uid(), exerciseId: exId, plan: DB.lastSets(exId, U.today()) || DB.newPlan(DB.ex(exId)) };
       DB.tpl(ui.tplId).days[d].push(it); Store.save();
       UI.close(); TemplateEditor.draw(); ItemSheet.open({ kind: 'tpl', tid: ui.tplId, d, id: it.id });
     });
@@ -2560,7 +2572,7 @@ const Train = {
         <h2 class="tr-name">${U.esc(DB.exName(it.exerciseId))}</h2>
         <div class="tr-sub">${cardio ? 'Bloque' : 'Serie'} <b>${c.s + 1}</b> de ${c.n}${doneNow ? ` · <span class="up">${I('check', 'sm')} hecha</span>` : ''}</div>
       </div>
-      <div class="tr-plan"><span class="muted">Previsto</span><b>${U.esc(DB.setText(ex, cardio ? p : { ...p, r: p.f ? null : p.r }))}</b></div>
+      <div class="tr-plan"><span class="muted">Previsto</span><b>${U.esc(DB.setText(ex, p))}</b></div>
       ${sg}
       <div class="tr-inputs ${cardio ? 'cardio' : ''}">${inputs}</div>
       <button class="btn primary block tr-go" data-act="tr-done">${I('check')}${doneNow ? 'Guardar cambios' : 'Hecho'}</button>
